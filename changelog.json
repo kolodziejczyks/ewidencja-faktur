@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.2.1",
+    "date": "2026-10-31",
+    "pl": [
+      "Powiadomienie o nowej wersji jest krótsze. Pełny opis zmian otwiera się po kliknięciu „Co nowego?”."
+    ],
+    "en": [
+      "The new-version notice is shorter. The full list of changes opens behind \"Co nowego?\"."
+    ]
+  },
+  {
     "version": "0.2.0",
     "date": "2026-10-31",
     "pl": [

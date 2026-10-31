@@ -923,12 +923,13 @@ textarea.input {
   flex: 1;
 }
 
-.update-banner .notes {
-  color: var(--ink-2);
-  font-size: 0.92rem;
-  white-space: pre-line;
-  max-height: 4.5em;
-  overflow: hidden;
+.notes-list {
+  margin: 8px 0 0;
+  padding-left: 24px;
+}
+
+.notes-list li {
+  margin-bottom: 8px;
 }
 
 .modal-backdrop {

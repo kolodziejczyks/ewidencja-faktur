@@ -7,7 +7,7 @@
  */
 import { _electron as electron } from 'playwright-core'
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -151,16 +151,20 @@ await page.click('nav >> text=Ustawienia')
 await page.click('button:has-text("Co nowego w programie")')
 await page.screenshot({ path: join(shots, '10-settings.png'), fullPage: true })
 
-// Update banner, as the user would see it once an update has downloaded
-await app.evaluate(({ BrowserWindow }) => {
-  BrowserWindow.getAllWindows()[0].webContents.send('update-state', {
-    status: 'ready',
-    version: '0.2.0',
-    releaseNotes: 'Co nowego\nDodaliśmy przypomnienia o terminach płatności.\n\nWhat’s new\nPayment reminders.'
-  })
-})
+// Update banner, as the user would see it once an update has downloaded — with real, long notes
+const releaseNotes = readFileSync(join(root, 'build/release-notes.md'), 'utf8')
+await app.evaluate(({ BrowserWindow }, notes) => {
+  BrowserWindow.getAllWindows()[0].webContents.send('update-state', { status: 'ready', version: '9.9.9', releaseNotes: notes })
+}, releaseNotes)
 await page.click('nav >> text=Faktury')
+const banner = await page.locator('.update-banner').boundingBox()
+check('update banner stays compact', banner != null && banner.height < 140, true)
 await page.screenshot({ path: join(shots, '11-update-banner.png') })
+await page.click('.update-banner >> button:has-text("Co nowego?")')
+check('release notes dialog lists the Polish changes', (await page.locator('.notes-list li').count()) > 0, true)
+check('release notes dialog has no English part', await page.isVisible('.notes-list >> text=What'), false)
+await page.screenshot({ path: join(shots, '12-update-notes.png') })
+await page.click('.modal >> button:has-text("Zamknij")')
 
 await app.close()
 rmSync(work, { recursive: true, force: true })
