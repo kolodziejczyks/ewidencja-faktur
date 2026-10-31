@@ -1,14 +1,28 @@
 /** Date ranges offered on the "Do druku" screen, all relative to today. */
 
-import { addDays, monthKey, shiftMonth } from './dates'
+import { addDays, formatDate, monthKey, shiftMonth } from './dates'
+import { lastDayOf, periodName, periodOf, type PeriodKind } from './periods'
 
-export type PrintRangeId = 'last10Days' | 'thisMonth' | 'lastMonth' | 'lastQuarter' | 'thisYear'
+export type PrintRangeId = 'last10Days' | 'thisMonth' | 'lastMonth' | 'lastQuarter' | 'thisYear' | 'custom'
 
 export interface PrintRange {
   id: PrintRangeId
   label: string
   from: string
   to: string
+}
+
+/**
+ * A date range in words, for the top of a printout: "październik 2026", "III kwartał 2026",
+ * "rok 2026" when it covers exactly that, otherwise "22.10 – 31.10.2026" or "15.12.2025 – 14.01.2026".
+ */
+export function describeRange(from: string, to: string): string {
+  for (const kind of ['month', 'quarter', 'year'] as PeriodKind[]) {
+    const p = periodOf(kind, from)
+    if (from === `${p.start}-01` && to === lastDayOf(p)) return periodName(p)
+  }
+  if (from === to) return formatDate(from)
+  return from.slice(0, 4) === to.slice(0, 4) ? `${formatDate(from).slice(0, 5)} – ${formatDate(to)}` : `${formatDate(from)} – ${formatDate(to)}`
 }
 
 function monthEnd(key: string): string {

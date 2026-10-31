@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.6.0",
+    "date": "2026-10-31",
+    "pl": [
+      "Do druku: nowy przycisk „Wybrane daty” — można wydrukować dowolny okres, wybierając dzień początkowy i końcowy z kalendarza.",
+      "Wydruk od razu mówi, czego dotyczy: u góry duży napis z okresem (np. „III kwartał 2026”), pod nim dokładne daty, liczba faktur i łączna kwota, a u dołu każdej kartki numer strony.",
+      "Podsumowanie: okres, który jeszcze trwa, porównuje się z tym samym fragmentem poprzedniego — np. IV kwartał do 31.10 z III kwartałem do 31.07 — zamiast z całym poprzednim okresem."
+    ],
+    "en": [
+      "Printing: a new “Wybrane daty” button lets you print any period by picking the first and last day from a calendar.",
+      "Printouts now say at a glance what they cover: the period in large type at the top (e.g. “III kwartał 2026”), the exact dates, invoice count and total below it, and a page number at the bottom of every page.",
+      "Summary: a period that is still going on is compared with the same stretch of the previous one — e.g. Q4 up to 31 Oct with Q3 up to 31 Jul — instead of the whole previous period."
+    ]
+  },
+  {
     "version": "0.5.1",
     "date": "2026-10-31",
     "pl": [

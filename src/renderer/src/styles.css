@@ -1065,7 +1065,17 @@ textarea.input {
 }
 
 .print-header h2 {
-  margin: 0 0 4px;
+  margin: 2px 0 4px;
+  font-size: 1.9em;
+  line-height: 1.15;
+}
+
+.print-kicker {
+  font-size: 0.85em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #444;
 }
 
 .print-table,
@@ -1166,6 +1176,12 @@ textarea.input {
   @page {
     size: A4 portrait;
     margin: 14mm;
+
+    @bottom-right {
+      content: 'Strona ' counter(page) ' z ' counter(pages);
+      font-size: 8pt;
+      color: #555;
+    }
   }
 
   html,

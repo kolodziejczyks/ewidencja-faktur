@@ -1,6 +1,6 @@
 /** Calendar periods for the summary screen: a month, a quarter or a year, identified by its first month. */
 
-import { MONTH_NAMES, MONTH_NAMES_SHORT, inMonthPhrase, monthKey, shiftMonth } from './dates'
+import { MONTH_NAMES, MONTH_NAMES_SHORT, inMonthPhrase, monthKey, monthsBetween, shiftDateByMonths, shiftMonth } from './dates'
 
 export type PeriodKind = 'month' | 'quarter' | 'year'
 
@@ -67,7 +67,17 @@ export function inPeriodPhrase(p: Period): string {
   return `w ${y} r.`
 }
 
-export function invoicesInPeriod<T extends { issueDate: string }>(invoices: T[], p: Period): T[] {
+/** Invoices of the period, optionally only those issued up to and including `until`. */
+export function invoicesInPeriod<T extends { issueDate: string }>(invoices: T[], p: Period, until?: string): T[] {
   const months = new Set(periodMonths(p))
-  return invoices.filter((inv) => months.has(monthKey(inv.issueDate)))
+  return invoices.filter((inv) => months.has(monthKey(inv.issueDate)) && (!until || inv.issueDate <= until))
 }
+
+/** Whether the date falls inside the period, i.e. the period is not over yet. */
+export const isOngoing = (p: Period, iso: string): boolean => `${p.start}-01` <= iso && iso <= lastDayOf(p)
+
+/**
+ * The point in `other` that matches `iso` in `p` — for comparing an unfinished period fairly:
+ * on 31.10.2026 the 4th quarter so far is compared with the 3rd quarter up to 31.07.2026.
+ */
+export const matchingDay = (p: Period, other: Period, iso: string): string => shiftDateByMonths(iso, monthsBetween(p.start, other.start))

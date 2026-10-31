@@ -6,12 +6,14 @@
 
 import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { today } from '@shared/dates'
+import { formatDate, today } from '@shared/dates'
 import { formatMoney } from '@shared/money'
 import {
   inPeriodPhrase,
   invoicesInPeriod,
+  isOngoing,
   lastDayOf,
+  matchingDay,
   periodLabel,
   periodName,
   periodOf,
@@ -73,6 +75,18 @@ export function SummaryScreen({ data }: { data: AppData }) {
   const yearAgo = yearBefore(period)
   const inPeriod = useMemo(() => invoicesInPeriod(invoices, period), [invoices, period])
   const inPrevious = invoicesInPeriod(invoices, previous)
+  const inYearAgo = invoicesInPeriod(invoices, yearAgo)
+
+  // A period that is still going on is compared with the same stretch of the earlier ones — the
+  // 4th quarter up to 31.10 with the 3rd quarter up to 31.07 — not with the whole of them.
+  const now = today()
+  const ongoing = isOngoing(period, now)
+  const shortDate = (iso: string) => formatDate(iso).slice(0, 5)
+  const cutoff = (other: Period) => (ongoing ? matchingDay(period, other, now) : undefined)
+  const upTo = (other: Period) => (ongoing ? ` do ${shortDate(cutoff(other)!)}` : '')
+  const inPreviousSoFar = invoicesInPeriod(invoices, previous, cutoff(previous))
+  const inYearAgoSoFar = invoicesInPeriod(invoices, yearAgo, cutoff(yearAgo))
+
   const current = sumAmounts(inPeriod)
   const byMethod = (method: 'transfer' | 'cash') => sumAmounts(inPeriod.filter((i) => i.paymentMethod === method))
 
@@ -96,7 +110,7 @@ export function SummaryScreen({ data }: { data: AppData }) {
 
   const bySupplier = totalsBy(inPeriod, (i) => i.supplierName)
   const byCategory = totalsBy(inPeriod, (i) => i.categoryName || 'Bez kategorii')
-  const comparison = compareSuppliers(inPrevious, inPeriod).filter((r) => r.diff !== 0)
+  const comparison = compareSuppliers(inPreviousSoFar, inPeriod).filter((r) => r.diff !== 0)
   const empty = 'Brak faktur w tym okresie.'
 
   return (
@@ -130,21 +144,34 @@ export function SummaryScreen({ data }: { data: AppData }) {
         <div className="card">
           <div className="stat-label">Koszty — {periodName(period)}</div>
           <div className="stat-value">{formatMoney(current)}</div>
-          <div className="stat-note">{plural(inPeriod.length, INVOICES)}</div>
-          <Change current={current} previous={sumAmounts(inPrevious)} against={inPeriodPhrase(previous)} />
+          <div className="stat-note">
+            {plural(inPeriod.length, INVOICES)}
+            {ongoing && ` — stan na ${shortDate(now)}, okres jeszcze trwa`}
+          </div>
+          <Change current={current} previous={sumAmounts(inPreviousSoFar)} against={inPeriodPhrase(previous) + upTo(previous)} />
         </div>
         <div className="card">
           <div className="stat-label">
             {kind.previous} — {periodName(previous)}
           </div>
           <div className="stat-value">{formatMoney(sumAmounts(inPrevious))}</div>
-          <span className="stat-note">{plural(inPrevious.length, INVOICES)}</span>
+          <div className="stat-note">{plural(inPrevious.length, INVOICES)}</div>
+          {ongoing && (
+            <div className="stat-note">
+              w tym{upTo(previous)}: <strong>{formatMoney(sumAmounts(inPreviousSoFar))}</strong>
+            </div>
+          )}
         </div>
         {period.kind !== 'year' && (
           <div className="card">
             <div className="stat-label">Rok wcześniej — {periodName(yearAgo)}</div>
-            <div className="stat-value">{formatMoney(sumAmounts(invoicesInPeriod(invoices, yearAgo)))}</div>
-            <Change current={current} previous={sumAmounts(invoicesInPeriod(invoices, yearAgo))} against="rok temu" />
+            <div className="stat-value">{formatMoney(sumAmounts(inYearAgo))}</div>
+            {ongoing && (
+              <div className="stat-note">
+                w tym{upTo(yearAgo)}: <strong>{formatMoney(sumAmounts(inYearAgoSoFar))}</strong>
+              </div>
+            )}
+            <Change current={current} previous={sumAmounts(inYearAgoSoFar)} against={'rok temu' + upTo(yearAgo)} />
           </div>
         )}
         <div className="card">
@@ -222,6 +249,11 @@ export function SummaryScreen({ data }: { data: AppData }) {
 
       <div className="card">
         <h2>Co się zmieniło od {kind.since}</h2>
+        {ongoing && (
+          <p className="muted">
+            {periodLabel(period)} jeszcze trwa, więc porównanie obejmuje {periodName(previous)} tylko{upTo(previous)}.
+          </p>
+        )}
         {comparison.length === 0 ? (
           <p className="muted">Brak różnic do pokazania.</p>
         ) : (
@@ -229,7 +261,10 @@ export function SummaryScreen({ data }: { data: AppData }) {
             <thead>
               <tr>
                 <th>Dostawca</th>
-                <th className="num">{periodLabel(previous)}</th>
+                <th className="num">
+                  {periodLabel(previous)}
+                  {upTo(previous)}
+                </th>
                 <th className="num">{periodLabel(period)}</th>
                 <th className="num">Różnica</th>
               </tr>

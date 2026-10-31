@@ -53,8 +53,8 @@
 | ID | Requirement | Status |
 |---|---|---|
 | C1 | Month total compared with the previous month in the ledger | ✅ 0.1 |
-| C2 | Summary: chosen month, quarter or year vs the previous period and the same period a year ago | ✅ 0.1 (quarter/year 0.5) |
-| C3 | Chart of the last 12 months against the 12 months before | ✅ 0.1 |
+| C2 | Summary: chosen month, quarter or year vs the previous period and the same period a year ago; a period still in progress is compared with the same stretch of the earlier ones | ✅ 0.1 (quarter/year 0.5, ongoing 0.6) |
+| C3 | Chart stepping by the chosen period: 12 months or 4 quarters against the year before, or year by year | ✅ 0.1 (per period 0.5.1) |
 | C4 | Breakdown by supplier and by category | ✅ 0.1 |
 | C5 | Per-supplier differences between two consecutive months | ✅ 0.1 |
 | C6 | Duplicate warning (same supplier + number, or the same file) while entering and in the ledger | ✅ 0.1 |
@@ -68,6 +68,7 @@
 | D1 | Printable A4 list for: last 10 calendar days (default), this month, last month, last full quarter, this year | ✅ 0.2 |
 | D2 | Totals on the printout: overall, by transfer, by cash | ✅ 0.2 |
 | D5 | One-page summary printout (per day or month, per category, top 10 suppliers); default for a quarter or a year; page estimate for the full list; always portrait A4 | ✅ 0.4 |
+| D6 | Any date range picked from a calendar; the printout names the period in words in large type, with dates, count, total and page numbers | ✅ 0.6 |
 | D3 | ~~Excel export~~ | replaced by printing in 0.2 |
 | D4 | ZIP package for the accountant (list + all files of the period) | 💡 idea |
 

@@ -69,6 +69,21 @@ export function shiftMonth(key: string, delta: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }
 
+/** Number of months from one `YYYY-MM` key to another: ("2026-07", "2026-10") -> 3 */
+export function monthsBetween(fromKey: string, toKey: string): number {
+  const [fy, fm] = fromKey.split('-').map(Number)
+  const [ty, tm] = toKey.split('-').map(Number)
+  return (ty - fy) * 12 + (tm - fm)
+}
+
+/** The same day a number of months away, clamped to the month's end: ("2026-10-31", -1) -> "2026-09-30" */
+export function shiftDateByMonths(iso: string, delta: number): string {
+  const key = shiftMonth(monthKey(iso), delta)
+  const [y, m] = key.split('-').map(Number)
+  const day = Math.min(Number(iso.slice(8, 10)), new Date(y, m, 0).getDate())
+  return `${key}-${String(day).padStart(2, '0')}`
+}
+
 export function isValidIsoDate(iso: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false
   return toIsoDate(parseIsoDate(iso)) === iso

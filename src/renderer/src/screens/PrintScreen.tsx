@@ -6,10 +6,10 @@
  */
 
 import { useState } from 'react'
-import { daysBetween, formatDate, formatMonthKey, today } from '@shared/dates'
+import { daysBetween, formatDate, formatMonthKey, isValidIsoDate, today } from '@shared/dates'
 import { formatMoney } from '@shared/money'
 import { formatNip } from '@shared/nip'
-import { printRanges, type PrintRange, type PrintRangeId } from '@shared/printRanges'
+import { describeRange, printRanges, type PrintRange, type PrintRangeId } from '@shared/printRanges'
 import { paymentMethodLabel, sumAmounts, topWithRest, totalsBy, totalsByPeriod, type GroupTotal } from '@shared/summary'
 import type { Invoice } from '@shared/types'
 import type { AppData } from '../useAppData'
@@ -27,7 +27,11 @@ export function PrintScreen({ data }: { data: AppData }) {
   const ranges = printRanges(today())
   const [rangeId, setRangeId] = useState<PrintRangeId>('last10Days')
   const [layout, setLayout] = useState<Layout>(defaultLayout('last10Days'))
-  const range = ranges.find((r) => r.id === rangeId)!
+  const [custom, setCustom] = useState({ from: ranges[0].from, to: ranges[0].to })
+  // Dates typed the wrong way round are simply swapped.
+  const [customFrom, customTo] = custom.from <= custom.to ? [custom.from, custom.to] : [custom.to, custom.from]
+  const range: PrintRange =
+    rangeId === 'custom' ? { id: 'custom', label: 'Wybrane daty', from: customFrom, to: customTo } : ranges.find((r) => r.id === rangeId)!
 
   const rows = data.invoices
     .filter((i) => i.issueDate >= range.from && i.issueDate <= range.to)
@@ -56,7 +60,41 @@ export function PrintScreen({ data }: { data: AppData }) {
                 {r.label}
               </button>
             ))}
+            <button
+              className={`btn ${rangeId === 'custom' ? 'btn-primary' : ''}`}
+              onClick={() => {
+                // Start from the period shown so far, so only the ends need adjusting.
+                if (rangeId !== 'custom') setCustom({ from: range.from, to: range.to })
+                setRangeId('custom')
+              }}
+            >
+              📅 Wybrane daty
+            </button>
           </div>
+          {rangeId === 'custom' && (
+            <div className="field-row" style={{ maxWidth: 520, marginTop: 16 }}>
+              <div className="field">
+                <label htmlFor="printFrom">Od dnia</label>
+                <input
+                  id="printFrom"
+                  type="date"
+                  className="input"
+                  value={custom.from}
+                  onChange={(e) => isValidIsoDate(e.target.value) && setCustom({ ...custom, from: e.target.value })}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="printTo">Do dnia</label>
+                <input
+                  id="printTo"
+                  type="date"
+                  className="input"
+                  value={custom.to}
+                  onChange={(e) => isValidIsoDate(e.target.value) && setCustom({ ...custom, to: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
           <p style={{ margin: '16px 0' }}>
             Od <strong>{formatDate(range.from)}</strong> do <strong>{formatDate(range.to)}</strong>: {plural(rows.length, INVOICES)} na łączną kwotę{' '}
             <strong>{formatMoney(sumAmounts(rows))}</strong>.
@@ -85,13 +123,20 @@ export function PrintScreen({ data }: { data: AppData }) {
   )
 }
 
-function SheetHeader({ title, range }: { title: string; range: PrintRange }) {
+/**
+ * The top of the printout, made to be recognised at a glance in a binder: what kind of printout it
+ * is, the period in words in large type, then the exact dates, the number of invoices and the total.
+ */
+function SheetHeader({ kind, range, rows }: { kind: string; range: PrintRange; rows: Invoice[] }) {
+  const period = describeRange(range.from, range.to)
   return (
     <header className="print-header">
       <div>
-        <h2>{title}</h2>
+        <div className="print-kicker">Faktury kosztowe — {kind}</div>
+        <h2>{period.charAt(0).toUpperCase() + period.slice(1)}</h2>
         <div>
-          {range.label}: od {formatDate(range.from)} do {formatDate(range.to)}
+          od {formatDate(range.from)} do {formatDate(range.to)} · {plural(rows.length, INVOICES)} · razem{' '}
+          <strong>{formatMoney(sumAmounts(rows))}</strong>
         </div>
       </div>
       <div className="muted">Wydrukowano {formatDate(today())}</div>
@@ -104,7 +149,7 @@ function DetailedSheet({ rows, range }: { rows: Invoice[]; range: PrintRange }) 
   const withoutMethod = rows.filter((i) => !i.paymentMethod)
   return (
     <article className="print-sheet">
-      <SheetHeader title="Zestawienie faktur" range={range} />
+      <SheetHeader kind="pełna lista" range={range} rows={rows} />
 
       {rows.length === 0 ? (
         <p className="muted">W tym okresie nie ma żadnych faktur.</p>
@@ -178,7 +223,7 @@ function SummarySheet({ rows, range }: { rows: Invoice[]; range: PrintRange }) {
 
   return (
     <article className="print-sheet print-compact">
-      <SheetHeader title="Podsumowanie faktur" range={range} />
+      <SheetHeader kind="podsumowanie" range={range} rows={rows} />
 
       {rows.length === 0 ? (
         <p className="muted">W tym okresie nie ma żadnych faktur.</p>

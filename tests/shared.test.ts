@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { formatMoney, moneyToInput, parseMoney } from '../src/shared/money'
 import { formatNip, isValidNip } from '../src/shared/nip'
 import { computeFlags } from '../src/shared/insights'
-import { periodLabel, periodOf, periodShortLabel, inPeriodPhrase, invoicesInPeriod, lastDayOf, shiftPeriod } from '../src/shared/periods'
+import { shiftDateByMonths } from '../src/shared/dates'
+import { periodLabel, periodOf, periodShortLabel, inPeriodPhrase, invoicesInPeriod, isOngoing, lastDayOf, matchingDay, shiftPeriod } from '../src/shared/periods'
 import { compareSuppliers, invoicesInMonth, monthSeries, periodSeries, topWithRest, totalsByPeriod } from '../src/shared/summary'
 
 describe('money', () => {
@@ -126,6 +127,15 @@ describe('periods', () => {
       ['II kw. 26', 400]
     ])
     expect(periodSeries(rows, { kind: 'year', start: '2026-01' }, 2).map((s) => s.total)).toEqual([100, 900])
+  })
+
+  it('matches the same day in an earlier period, clamped to the month end', () => {
+    const q4 = { kind: 'quarter' as const, start: '2026-10' }
+    expect(isOngoing(q4, '2026-10-31')).toBe(true)
+    expect(isOngoing(q4, '2027-01-01')).toBe(false)
+    expect(matchingDay(q4, shiftPeriod(q4, -1), '2026-10-31')).toBe('2026-07-31')
+    expect(matchingDay({ kind: 'month', start: '2026-10' }, { kind: 'month', start: '2026-09' }, '2026-10-31')).toBe('2026-09-30')
+    expect(shiftDateByMonths('2024-03-31', -1)).toBe('2024-02-29')
   })
 
   it('selects the invoices of a quarter', () => {
