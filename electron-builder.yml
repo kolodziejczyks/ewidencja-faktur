@@ -51,8 +51,9 @@ publish:
   provider: github
   owner: kolodziejczyks
   repo: ewidencja-faktur
-  # Publish straight away; drafts are invisible to the auto-updater.
-  releaseType: release
+  # Upload into a draft (created up front by the release workflow); the workflow publishes it once
+  # every file is there, so the auto-updater never sees a half-uploaded release.
+  releaseType: draft
 
 releaseInfo:
   releaseNotesFile: build/release-notes.md
