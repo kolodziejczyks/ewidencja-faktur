@@ -1,6 +1,7 @@
 /** Aggregations used by the summary screen and the Excel export. */
 
 import { monthKey, shiftMonth } from './dates'
+import { periodMonths, shiftPeriod, type Period } from './periods'
 import type { Invoice, PaymentMethod } from './types'
 
 export interface MonthTotal {
@@ -56,6 +57,15 @@ export function monthSeries(invoices: SummaryInput[], lastMonth: string, count: 
   return Array.from({ length: count }, (_, i) => {
     const key = shiftMonth(lastMonth, i - count + 1)
     return totals.get(key) ?? { month: key, total: 0, count: 0 }
+  })
+}
+
+/** Totals for the last `count` periods ending with `last` (months, quarters or years), including empty ones. */
+export function periodSeries(invoices: SummaryInput[], last: Period, count: number): { period: Period; total: number }[] {
+  const months = totalsByMonth(invoices)
+  return Array.from({ length: count }, (_, i) => {
+    const period = shiftPeriod(last, i - count + 1)
+    return { period, total: periodMonths(period).reduce((s, m) => s + (months.get(m)?.total ?? 0), 0) }
   })
 }
 

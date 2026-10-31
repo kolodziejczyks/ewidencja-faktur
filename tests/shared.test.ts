@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { formatMoney, moneyToInput, parseMoney } from '../src/shared/money'
 import { formatNip, isValidNip } from '../src/shared/nip'
 import { computeFlags } from '../src/shared/insights'
-import { periodLabel, periodOf, inPeriodPhrase, invoicesInPeriod, lastDayOf, shiftPeriod } from '../src/shared/periods'
-import { compareSuppliers, invoicesInMonth, monthSeries, topWithRest, totalsByPeriod } from '../src/shared/summary'
+import { periodLabel, periodOf, periodShortLabel, inPeriodPhrase, invoicesInPeriod, lastDayOf, shiftPeriod } from '../src/shared/periods'
+import { compareSuppliers, invoicesInMonth, monthSeries, periodSeries, topWithRest, totalsByPeriod } from '../src/shared/summary'
 
 describe('money', () => {
   it.each([
@@ -108,6 +108,24 @@ describe('periods', () => {
     expect(inPeriodPhrase({ kind: 'month', start: '2026-09' })).toBe('we wrześniu')
     expect(inPeriodPhrase({ kind: 'quarter', start: '2026-07' })).toBe('w III kwartale')
     expect(lastDayOf({ kind: 'quarter', start: '2024-01' })).toBe('2024-03-31')
+  })
+
+  it('totals a series of quarters and years', () => {
+    const inv = (issueDate: string, supplierName: string, grossAmount: number) => ({
+      issueDate, supplierName, grossAmount, categoryName: '', paymentMethod: null
+    })
+    const rows = [
+      inv('2025-12-31', 'A', 100),
+      inv('2026-01-05', 'A', 200),
+      inv('2026-03-31', 'B', 300),
+      inv('2026-04-01', 'A', 400)
+    ]
+    expect(periodSeries(rows, { kind: 'quarter', start: '2026-04' }, 3).map((s) => [periodShortLabel(s.period), s.total])).toEqual([
+      ['IV kw. 25', 100],
+      ['I kw. 26', 500],
+      ['II kw. 26', 400]
+    ])
+    expect(periodSeries(rows, { kind: 'year', start: '2026-01' }, 2).map((s) => s.total)).toEqual([100, 900])
   })
 
   it('selects the invoices of a quarter', () => {

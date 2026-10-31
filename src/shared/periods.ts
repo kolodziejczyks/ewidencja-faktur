@@ -1,6 +1,6 @@
 /** Calendar periods for the summary screen: a month, a quarter or a year, identified by its first month. */
 
-import { MONTH_NAMES, inMonthPhrase, monthKey, shiftMonth } from './dates'
+import { MONTH_NAMES, MONTH_NAMES_SHORT, inMonthPhrase, monthKey, shiftMonth } from './dates'
 
 export type PeriodKind = 'month' | 'quarter' | 'year'
 
@@ -43,6 +43,14 @@ export function periodLabel(p: Period): string {
   if (p.kind === 'month') return `${MONTH_NAMES[m - 1]} ${y}`
   if (p.kind === 'quarter') return `${ROMAN[(m - 1) / 3]} kwartał ${y}`
   return `Rok ${y}`
+}
+
+/** Chart axis label: "paź 26", "IV kw. 26", "2026" */
+export function periodShortLabel(p: Period): string {
+  const [y, m] = p.start.split('-').map(Number)
+  if (p.kind === 'month') return `${MONTH_NAMES_SHORT[m - 1]} ${String(y).slice(2)}`
+  if (p.kind === 'quarter') return `${ROMAN[(m - 1) / 3]} kw. ${String(y).slice(2)}`
+  return String(y)
 }
 
 /** The label inside a sentence: "październik 2026", "IV kwartał 2026", "rok 2026". */

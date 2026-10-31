@@ -6,32 +6,42 @@
 
 import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatMonthKey, MONTH_NAMES_SHORT, shiftMonth, today } from '@shared/dates'
+import { today } from '@shared/dates'
 import { formatMoney } from '@shared/money'
 import {
   inPeriodPhrase,
   invoicesInPeriod,
   lastDayOf,
-  lastMonthOf,
   periodLabel,
   periodName,
   periodOf,
+  periodShortLabel,
   shiftPeriod,
   yearBefore,
   type Period,
   type PeriodKind
 } from '@shared/periods'
-import { compareSuppliers, monthSeries, percentChange, sumAmounts, totalsBy } from '@shared/summary'
+import { compareSuppliers, percentChange, periodSeries, sumAmounts, totalsBy } from '@shared/summary'
 import type { AppData } from '../useAppData'
 import { INVOICES, plural } from '../lib/plural'
 
-const shortMonth = (key: string) => `${MONTH_NAMES_SHORT[Number(key.slice(5)) - 1]} ${key.slice(2, 4)}`
 const zl = (grosze: number) => `${Math.round(grosze / 100).toLocaleString('pl-PL')} zł`
 
-const KINDS: { kind: PeriodKind; label: string; previous: string; since: string }[] = [
-  { kind: 'month', label: 'Miesiąc', previous: 'Miesiąc wcześniej', since: 'poprzedniego miesiąca' },
-  { kind: 'quarter', label: 'Kwartał', previous: 'Kwartał wcześniej', since: 'poprzedniego kwartału' },
-  { kind: 'year', label: 'Rok', previous: 'Rok wcześniej', since: 'poprzedniego roku' }
+interface KindInfo {
+  kind: PeriodKind
+  label: string
+  previous: string
+  since: string
+  chartTitle: string
+  chartSeries: string
+  /** How many bars the chart shows, ending with the chosen period */
+  chartCount: number
+}
+
+const KINDS: KindInfo[] = [
+  { kind: 'month', label: 'Miesiąc', previous: 'Miesiąc wcześniej', since: 'poprzedniego miesiąca', chartTitle: 'Koszty miesiąc po miesiącu', chartSeries: 'Ostatnie 12 miesięcy', chartCount: 12 },
+  { kind: 'quarter', label: 'Kwartał', previous: 'Kwartał wcześniej', since: 'poprzedniego kwartału', chartTitle: 'Koszty kwartał po kwartale', chartSeries: 'Ostatnie 4 kwartały', chartCount: 4 },
+  { kind: 'year', label: 'Rok', previous: 'Rok wcześniej', since: 'poprzedniego roku', chartTitle: 'Koszty rok po roku', chartSeries: 'Koszty w roku', chartCount: 5 }
 ]
 
 function Change({ current, previous, against }: { current: number; previous: number; against: string }) {
@@ -66,13 +76,23 @@ export function SummaryScreen({ data }: { data: AppData }) {
   const current = sumAmounts(inPeriod)
   const byMethod = (method: 'transfer' | 'cash') => sumAmounts(inPeriod.filter((i) => i.paymentMethod === method))
 
-  const lastMonth = lastMonthOf(period)
+  // The chart steps by the chosen kind of period: months, quarters or years. Months and quarters
+  // get a second bar for the same period a year earlier; for years that is simply the previous bar.
   const chartData = useMemo(() => {
-    const thisYear = monthSeries(invoices, lastMonth, 12)
-    const lastYear = monthSeries(invoices, shiftMonth(lastMonth, -12), 12)
-    return thisYear.map((m, i) => ({ label: shortMonth(m.month), month: m.month, current: m.total, previous: lastYear[i].total }))
-  }, [invoices, lastMonth])
+    const series = periodSeries(invoices, period, kind.chartCount)
+    const before = period.kind === 'year' ? null : periodSeries(invoices, yearBefore(period), kind.chartCount)
+    const rows = series.map((s, i) => ({
+      label: periodShortLabel(s.period),
+      name: periodLabel(s.period),
+      current: s.total,
+      previous: before?.[i].total ?? 0
+    }))
+    // Years before the first invoice would only be empty bars.
+    while (period.kind === 'year' && rows.length > 1 && rows[0].current === 0) rows.shift()
+    return rows
+  }, [invoices, period, kind.chartCount])
   const hasLastYear = chartData.some((d) => d.previous > 0)
+  const chartFirst = shiftPeriod(period, 1 - chartData.length)
 
   const bySupplier = totalsBy(inPeriod, (i) => i.supplierName)
   const byCategory = totalsBy(inPeriod, (i) => i.categoryName || 'Bez kategorii')
@@ -140,20 +160,21 @@ export function SummaryScreen({ data }: { data: AppData }) {
 
       <div className="card chart-card">
         <h2>
-          Koszty miesiąc po miesiącu:{' '}
-          {period.kind === 'year'
-            ? periodName(period)
-            : `${formatMonthKey(shiftMonth(lastMonth, -11)).toLowerCase()} – ${formatMonthKey(lastMonth).toLowerCase()}`}
+          {kind.chartTitle}
+          {chartData.length > 1 &&
+            (period.kind === 'year'
+              ? `: ${chartFirst.start.slice(0, 4)}–${period.start.slice(0, 4)}`
+              : `: ${periodName(chartFirst)} – ${periodName(period)}`)}
         </h2>
         <div className="legend" aria-hidden>
           <span>
             <span className="legend-swatch" style={{ background: 'var(--series-1)' }} />
-            {period.kind === 'year' ? periodLabel(period) : 'Ostatnie 12 miesięcy'}
+            {kind.chartSeries}
           </span>
           {hasLastYear && (
             <span>
               <span className="legend-swatch" style={{ background: 'var(--series-muted)' }} />
-              {period.kind === 'year' ? periodLabel(previous) : 'Rok wcześniej'}
+              Rok wcześniej
             </span>
           )}
         </div>
@@ -170,7 +191,7 @@ export function SummaryScreen({ data }: { data: AppData }) {
                   const d = payload[0].payload as (typeof chartData)[number]
                   return (
                     <div className="chart-tooltip">
-                      <strong>{formatMonthKey(d.month)}</strong>
+                      <strong>{d.name}</strong>
                       <div>{formatMoney(d.current)}</div>
                       {hasLastYear && (
                         <div className="muted">

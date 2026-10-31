@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.5.1",
+    "date": "2026-10-31",
+    "pl": [
+      "Wykres w podsumowaniu idzie teraz za wybranym okresem: miesiąc po miesiącu, kwartał po kwartale (z porównaniem do roku wcześniej) albo rok po roku."
+    ],
+    "en": [
+      "The summary chart now follows the chosen period: month by month, quarter by quarter (compared with the year before) or year by year."
+    ]
+  },
+  {
     "version": "0.5.0",
     "date": "2026-10-31",
     "pl": [
