@@ -1,0 +1,88 @@
+import { describe, expect, it } from 'vitest'
+import { formatMoney, moneyToInput, parseMoney } from '../src/shared/money'
+import { formatNip, isValidNip } from '../src/shared/nip'
+import { computeFlags } from '../src/shared/insights'
+import { compareMonths, monthSeries } from '../src/shared/summary'
+
+describe('money', () => {
+  it.each([
+    ['1 234,56 zł', 123456],
+    ['1234.56', 123456],
+    ['1.234,56', 123456],
+    ['12', 1200],
+    ['0,5', 50],
+    ['-10,00', -1000],
+    ['abc', null],
+    ['', null]
+  ])('parses %s', (input, expected) => expect(parseMoney(input)).toBe(expected))
+
+  it('formats for display and editing', () => {
+    expect(formatMoney(123456)).toBe('1 234,56 zł')
+    expect(moneyToInput(123405)).toBe('1234,05')
+  })
+})
+
+describe('nip', () => {
+  it('validates the checksum', () => {
+    expect(isValidNip('525-000-12-04')).toBe(true)
+    expect(isValidNip('PL 7792433421')).toBe(true)
+    expect(isValidNip('5250001205')).toBe(false)
+    expect(isValidNip('0000000000')).toBe(false)
+  })
+  it('formats', () => expect(formatNip('5250001204')).toBe('525-000-12-04'))
+})
+
+describe('computeFlags', () => {
+  const base = { kind: 'invoice' as const, paid: true, dueDate: null, number: '' }
+
+  it('flags overdue and soon-due unpaid invoices', () => {
+    const flags = computeFlags(
+      [
+        { ...base, id: 1, supplierId: 1, issueDate: '2026-10-01', grossAmount: 100, paid: false, dueDate: '2026-10-20' },
+        { ...base, id: 2, supplierId: 1, issueDate: '2026-10-01', grossAmount: 100, paid: false, dueDate: '2026-11-02' }
+      ],
+      '2026-10-31'
+    )
+    expect(flags.get(1)).toEqual([{ type: 'overdue', daysLate: 11 }])
+    expect(flags.get(2)).toEqual([{ type: 'dueSoon', daysLeft: 2 }])
+  })
+
+  it('flags duplicates by supplier and normalized number', () => {
+    const flags = computeFlags(
+      [
+        { ...base, id: 1, supplierId: 7, number: 'FV/1/2026', issueDate: '2026-10-01', grossAmount: 100 },
+        { ...base, id: 2, supplierId: 7, number: 'fv/1/2026 ', issueDate: '2026-10-02', grossAmount: 100 },
+        { ...base, id: 3, supplierId: 8, number: 'FV/1/2026', issueDate: '2026-10-02', grossAmount: 100 }
+      ],
+      '2026-10-31'
+    )
+    expect(flags.get(1)).toEqual([{ type: 'duplicate', otherId: 2 }])
+    expect(flags.get(3)).toBeUndefined()
+  })
+
+  it('flags amounts far above the supplier median', () => {
+    const amounts = [10000, 11000, 9000, 10500, 20000]
+    const invoices = amounts.map((a, i) => ({ ...base, id: i + 1, supplierId: 1, issueDate: `2026-0${i + 1}-10`, grossAmount: a }))
+    const flags = computeFlags(invoices, '2026-10-31')
+    expect(flags.get(5)).toEqual([{ type: 'unusualAmount', percentAboveTypical: 95 }])
+    expect(flags.get(4)).toBeUndefined()
+  })
+})
+
+describe('summary', () => {
+  const inv = (issueDate: string, supplierName: string, grossAmount: number) => ({
+    issueDate, supplierName, grossAmount, categoryName: '', paid: true, kind: 'invoice' as const
+  })
+  const data = [inv('2026-09-03', 'A', 1000), inv('2026-10-03', 'A', 1500), inv('2026-10-04', 'B', 500)]
+
+  it('builds a month series including empty months', () => {
+    expect(monthSeries(data, '2026-11', 3).map((m) => m.total)).toEqual([1000, 2000, 0])
+  })
+
+  it('compares two months per supplier', () => {
+    expect(compareMonths(data, '2026-09', '2026-10')).toEqual([
+      { name: 'A', a: 1000, b: 1500, diff: 500, percent: 50 },
+      { name: 'B', a: 0, b: 500, diff: 500, percent: null }
+    ])
+  })
+})

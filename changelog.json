@@ -1,0 +1,22 @@
+[
+  {
+    "version": "0.1.0",
+    "date": "2026-10-31",
+    "pl": [
+      "Pierwsza wersja programu.",
+      "Dodawanie faktur z plików PDF, zdjęć i dokumentów Word — program sam odczytuje numer, dostawcę, NIP, daty i kwotę.",
+      "Zeszyt faktur pogrupowany po miesiącach, z wyszukiwarką i przypomnieniami o terminach płatności.",
+      "Podsumowanie z wykresami i porównaniem miesięcy.",
+      "Ostrzeżenia o duplikatach i nietypowo wysokich kwotach.",
+      "Eksport do Excela, kosz na usunięte wpisy i codzienna kopia zapasowa."
+    ],
+    "en": [
+      "First release.",
+      "Add invoices from PDFs, photos and Word documents — number, supplier, tax ID, dates and amount are read automatically.",
+      "Invoice ledger grouped by month, with search and payment due reminders.",
+      "Summary with charts and month-over-month comparison.",
+      "Warnings about duplicates and unusually high amounts.",
+      "Excel export, a recycle bin for deleted entries and a daily backup."
+    ]
+  }
+]

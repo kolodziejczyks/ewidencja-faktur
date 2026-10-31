@@ -1,0 +1,89 @@
+<p align="center">
+  <img src="build/icon.png" width="96" alt="" />
+</p>
+
+<h1 align="center">Ewidencja Faktur</h1>
+
+<p align="center">
+  A simple, offline invoice ledger for Windows — built for a small grocery shop run by someone
+  who grew up without computers.
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/ledger.png" width="800" alt="The invoice ledger" />
+</p>
+
+## Why
+
+It was written for a family member who runs a small grocery store and kept every cost invoice in
+a paper notebook, copying each one by hand. This app replaces the notebook: drop in a PDF or a
+photo of an invoice, check the fields it read automatically, and it is filed, searchable, summed
+up per month and backed up.
+
+The user interface is in **Polish** (that is who it is for); the code and documentation are in
+English.
+
+## Features
+
+- **Add invoices from PDF, photos (JPG/PNG) or Word (.docx)** — drag & drop or pick files, several at once.
+- **Automatic reading** of invoice number, supplier, tax ID (NIP), issue/due dates and amounts:
+  PDF text layer when available, otherwise **offline OCR** (Tesseract, Polish model bundled).
+  Every guessed field is highlighted so it gets checked before saving.
+- **The notebook view** — entries grouped by month with totals and month-over-month change,
+  one search box, filters for unpaid / overdue.
+- **Warnings** — overdue and soon-due payments, likely duplicates (same supplier + number, or
+  the same file twice) and amounts far above what a supplier usually charges.
+- **Summary** — costs per month vs. the year before, top suppliers, categories, and a per-supplier
+  comparison with the previous month.
+- **Excel export** of any period (list + monthly/supplier/category totals), e.g. for the accountant.
+- **Safe by default** — no save button to forget, a 30-day recycle bin, daily automatic backups
+  (to OneDrive when available) and one-click restore.
+- **Automatic updates** from GitHub Releases, downloaded quietly and installed with one click;
+  a "what's new" note (Polish / English) is shown after each update.
+
+| Adding a photographed invoice | Summary |
+| --- | --- |
+| ![Adding an invoice](docs/screenshots/add-photo.png) | ![Summary](docs/screenshots/summary.png) |
+
+## Accessibility choices
+
+The target user is not technical, so the UI deliberately trades density for clarity:
+19 px base font, high contrast, 48 px+ click targets, every icon paired with a text label,
+one task per screen, plain-language messages ("Zapisano ✓" rather than "Operation completed"),
+and nothing destructive without a confirmation and an undo.
+
+## Tech stack
+
+Electron · React · TypeScript · Vite (electron-vite) · SQLite (`node:sqlite`, no native modules) ·
+pdf.js · Tesseract.js · mammoth · ExcelJS · Recharts · electron-builder · electron-updater
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how it fits together and
+[docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) for the product requirements.
+
+## Development
+
+Requires Node.js 24+ on Windows.
+
+```bash
+npm install
+npm run dev          # app with hot reload
+npm test             # unit tests (invoice parser, money, NIP, warnings, summaries)
+npm run test:e2e     # drives the real app: imports a PDF and a photo, checks OCR, saves screenshots
+npm run dist         # builds the installer into dist/
+```
+
+## Releasing an update
+
+See [docs/RELEASING.md](docs/RELEASING.md). In short: bump the version, add a `changelog.json`
+entry, push a `vX.Y.Z` tag — GitHub Actions builds the installer and publishes the release, and
+installed apps pick it up within a few hours.
+
+## Privacy
+
+All data stays on the user's computer (`%APPDATA%\Ewidencja Faktur`) and in the backup folder
+they choose. Nothing is uploaded anywhere; the only network request is the update check against
+this repository's releases.
+
+## License
+
+[MIT](LICENSE)

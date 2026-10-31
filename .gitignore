@@ -1,0 +1,8 @@
+node_modules/
+out/
+dist/
+build/release-notes.md
+test-results/
+/screenshots/
+*.log
+.DS_Store

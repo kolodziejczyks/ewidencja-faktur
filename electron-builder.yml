@@ -1,0 +1,58 @@
+appId: com.kolodziejczyks.ewidencjafaktur
+productName: Ewidencja Faktur
+copyright: Copyright © 2026 kolodziejczyks
+
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - out/**/*
+  - package.json
+  - '!**/*.map'
+
+# The OCR worker runs in a worker thread, which cannot load code from inside app.asar.
+# Its script, everything it requires and the Polish model are therefore unpacked next to the archive.
+asarUnpack:
+  - node_modules/tesseract.js/**
+  - node_modules/tesseract.js-core/**
+  - node_modules/@tesseract.js-data/pol/4.0.0_best_int/**
+  - node_modules/bmp-js/**
+  - node_modules/idb-keyval/**
+  - node_modules/is-url/**
+  - node_modules/node-fetch/**
+  - node_modules/whatwg-url/**
+  - node_modules/tr46/**
+  - node_modules/webidl-conversions/**
+  - node_modules/regenerator-runtime/**
+  - node_modules/wasm-feature-detect/**
+  - node_modules/zlibjs/**
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.png
+  artifactName: Ewidencja-Faktur-Setup-${version}.${ext}
+
+# One-click installer: no wizard, installs for the current user (no admin rights needed),
+# puts a shortcut on the desktop and starts the app. Updates install the same way, silently.
+nsis:
+  oneClick: true
+  perMachine: false
+  allowElevation: false
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Ewidencja Faktur
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false
+
+publish:
+  provider: github
+  owner: kolodziejczyks
+  repo: ewidencja-faktur
+  # Publish straight away; drafts are invisible to the auto-updater.
+  releaseType: release
+
+releaseInfo:
+  releaseNotesFile: build/release-notes.md
