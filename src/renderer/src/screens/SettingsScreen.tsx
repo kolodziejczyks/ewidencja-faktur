@@ -10,6 +10,7 @@ interface Props {
   appInfo: AppInfo | null
   updateState: UpdateState
   notify: (message: string) => void
+  onOpenImport: () => void
 }
 
 function formatTimestamp(iso: string | null): string {
@@ -17,7 +18,7 @@ function formatTimestamp(iso: string | null): string {
   return new Date(iso).toLocaleString('pl-PL', { dateStyle: 'long', timeStyle: 'short' })
 }
 
-export function SettingsScreen({ data, appInfo, updateState, notify }: Props) {
+export function SettingsScreen({ data, appInfo, updateState, notify, onOpenImport }: Props) {
   return (
     <div className="screen" style={{ maxWidth: 1000 }}>
       <div className="screen-header">
@@ -29,6 +30,13 @@ export function SettingsScreen({ data, appInfo, updateState, notify }: Props) {
       <ShopSection data={data} notify={notify} />
       <CategoriesSection data={data} />
       <BackupSection notify={notify} />
+      <div className="card settings-section">
+        <h2>📥 Wczytaj faktury z pliku</h2>
+        <p className="muted">Dodaje wiele faktur naraz z przygotowanego pliku CSV — np. starsze faktury przepisane z zeszytu.</p>
+        <button className="btn" onClick={onOpenImport}>
+          Wczytaj faktury z pliku…
+        </button>
+      </div>
       <AboutSection appInfo={appInfo} updateState={updateState} />
     </div>
   )

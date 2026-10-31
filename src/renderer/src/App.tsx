@@ -7,12 +7,13 @@ import { AddScreen } from './screens/AddScreen'
 import { PrintScreen } from './screens/PrintScreen'
 import { InvoiceScreen } from './screens/InvoiceScreen'
 import { LedgerScreen } from './screens/LedgerScreen'
+import { ImportScreen } from './screens/ImportScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { SummaryScreen } from './screens/SummaryScreen'
 import { TrashScreen } from './screens/TrashScreen'
 import { useAppData } from './useAppData'
 
-type Screen = { name: 'ledger' } | { name: 'add' } | { name: 'invoice'; id: number } | { name: 'summary' } | { name: 'print' } | { name: 'trash' } | { name: 'settings' }
+type Screen = { name: 'ledger' } | { name: 'add' } | { name: 'invoice'; id: number } | { name: 'summary' } | { name: 'print' } | { name: 'trash' } | { name: 'settings' } | { name: 'import' }
 
 const NAV: { name: Screen['name']; label: string; icon: string }[] = [
   { name: 'ledger', label: 'Faktury', icon: '📒' },
@@ -117,7 +118,7 @@ export default function App() {
         {NAV.map((item) => (
           <button
             key={item.name}
-            className={`nav-button ${screen.name === item.name || (item.name === 'ledger' && screen.name === 'invoice') ? 'active' : ''}`}
+            className={`nav-button ${screen.name === item.name || (item.name === 'ledger' && screen.name === 'invoice') || (item.name === 'settings' && screen.name === 'import') ? 'active' : ''}`}
             onClick={() => setScreen({ name: item.name } as Screen)}
           >
             <span className="icon" aria-hidden>
@@ -166,7 +167,17 @@ export default function App() {
         {screen.name === 'summary' && <SummaryScreen data={data} />}
         {screen.name === 'print' && <PrintScreen data={data} />}
         {screen.name === 'trash' && <TrashScreen data={data} notify={notify} />}
-        {screen.name === 'settings' && <SettingsScreen data={data} appInfo={appInfo} updateState={updateState} notify={notify} />}
+        {screen.name === 'settings' && (
+          <SettingsScreen data={data} appInfo={appInfo} updateState={updateState} notify={notify} onOpenImport={() => setScreen({ name: 'import' })} />
+        )}
+        {screen.name === 'import' && (
+          <ImportScreen
+            data={data}
+            onBack={() => setScreen({ name: 'settings' })}
+            onShowInvoices={() => setScreen({ name: 'ledger' })}
+            notify={notify}
+          />
+        )}
       </main>
 
       {dragging && <div className="drop-overlay">📥 Upuść plik, aby dodać fakturę</div>}

@@ -6,3 +6,6 @@ test-results/
 /screenshots/
 *.log
 .DS_Store
+
+# Private data for one-off imports (photos of the notebook, transcriptions). Never commit.
+/import/

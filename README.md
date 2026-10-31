@@ -39,6 +39,8 @@ English.
   and a per-supplier comparison with the previous month.
 - **Ready to print** — an A4 list of invoices for the last 10 days, this month, last month, last
   quarter or this year, with totals split by payment method.
+- **CSV import** of many invoices at once (e.g. history transcribed from the notebook), with a
+  preview, duplicate detection and one-click undo — see [docs/IMPORT.md](docs/IMPORT.md).
 - **Safe by default** — no save button to forget, a 30-day recycle bin, daily automatic backups
   (to OneDrive when available) and one-click restore.
 - **Automatic updates** from GitHub Releases, downloaded quietly and installed with one click;

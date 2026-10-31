@@ -125,49 +125,69 @@ function upsertSupplier(name: string, nipRaw: string): number | null {
   return Number(result.lastInsertRowid)
 }
 
-export function saveInvoice(input: InvoiceInput): Invoice {
+/** Inserts or updates one invoice. Callers wrap it in a transaction. */
+function writeInvoice(input: InvoiceInput): number {
   const db = getDb()
   const now = nowIso()
+  const supplierId = upsertSupplier(input.supplierName, input.supplierNip)
+  const values = [
+    input.kind,
+    input.number.trim(),
+    supplierId,
+    input.issueDate,
+    input.dueDate,
+    input.grossAmount,
+    input.netAmount,
+    input.categoryId,
+    input.paymentMethod,
+    input.note
+  ] as const
+  let id = input.id
+  if (id) {
+    db.prepare(
+      `UPDATE invoices SET kind = ?, number = ?, supplier_id = ?, issue_date = ?, due_date = ?, gross_amount = ?,
+       net_amount = ?, category_id = ?, payment_method = ?, note = ?, updated_at = ? WHERE id = ?`
+    ).run(...values, now, id)
+  } else {
+    // The legacy paid/paid_date columns stay filled in: every recorded invoice is a paid one.
+    const result = db
+      .prepare(
+        `INSERT INTO invoices (kind, number, supplier_id, issue_date, due_date, gross_amount, net_amount, category_id,
+         payment_method, note, paid, paid_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`
+      )
+      .run(...values, input.issueDate, now, now)
+    id = Number(result.lastInsertRowid)
+  }
+  for (const fileId of input.fileIds) {
+    db.prepare('UPDATE files SET invoice_id = ? WHERE id = ? AND (invoice_id IS NULL OR invoice_id = ?)').run(id, fileId, id)
+  }
+  return id
+}
+
+function inTransaction<T>(fn: () => T): T {
+  const db = getDb()
   db.exec('BEGIN')
   try {
-    const supplierId = upsertSupplier(input.supplierName, input.supplierNip)
-    const values = [
-      input.kind,
-      input.number.trim(),
-      supplierId,
-      input.issueDate,
-      input.dueDate,
-      input.grossAmount,
-      input.netAmount,
-      input.categoryId,
-      input.paymentMethod,
-      input.note
-    ] as const
-    let id = input.id
-    if (id) {
-      db.prepare(
-        `UPDATE invoices SET kind = ?, number = ?, supplier_id = ?, issue_date = ?, due_date = ?, gross_amount = ?,
-         net_amount = ?, category_id = ?, payment_method = ?, note = ?, updated_at = ? WHERE id = ?`
-      ).run(...values, now, id)
-    } else {
-      // The legacy paid/paid_date columns stay filled in: every recorded invoice is a paid one.
-      const result = db
-        .prepare(
-          `INSERT INTO invoices (kind, number, supplier_id, issue_date, due_date, gross_amount, net_amount, category_id,
-           payment_method, note, paid, paid_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`
-        )
-        .run(...values, input.issueDate, now, now)
-      id = Number(result.lastInsertRowid)
-    }
-    for (const fileId of input.fileIds) {
-      db.prepare('UPDATE files SET invoice_id = ? WHERE id = ? AND (invoice_id IS NULL OR invoice_id = ?)').run(id, fileId, id)
-    }
+    const result = fn()
     db.exec('COMMIT')
-    return getInvoice(id)!
+    return result
   } catch (e) {
     db.exec('ROLLBACK')
     throw e
   }
+}
+
+export function saveInvoice(input: InvoiceInput): Invoice {
+  return getInvoice(inTransaction(() => writeInvoice(input)))!
+}
+
+/** Adds many invoices at once (all or nothing) and returns their ids, e.g. to undo the import. */
+export function importInvoices(inputs: InvoiceInput[]): number[] {
+  return inTransaction(() => inputs.map((input) => writeInvoice({ ...input, id: undefined })))
+}
+
+export function softDeleteInvoices(ids: number[]): void {
+  inTransaction(() => ids.forEach(softDeleteInvoice))
 }
 
 export function softDeleteInvoice(id: number): void {

@@ -1,7 +1,9 @@
 /** Wires the `window.api` calls from the UI to the main-process modules. */
 
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { basename, join } from 'node:path'
+import { IMPORT_TEMPLATE } from '@shared/importCsv'
 import { normalizeNip } from '@shared/nip'
 import type { ImportResult, InvoiceInput } from '@shared/types'
 import { backupFolder, getBackupStatus, restoreSnapshot, runBackup, setBackupFolder } from './backup'
@@ -28,6 +30,33 @@ export function registerIpc(): void {
   handle('saveInvoice', (input: InvoiceInput) => repo.saveInvoice(input))
   handle('deleteInvoice', repo.softDeleteInvoice)
   handle('restoreInvoice', repo.restoreInvoice)
+  handle('importInvoices', (inputs: InvoiceInput[]) => {
+    // A snapshot right before a bulk change, so an unwanted import can always be rolled back.
+    const backup = runBackup()
+    return { ids: repo.importInvoices(inputs), backupError: backup.lastError }
+  })
+  handle('deleteInvoices', repo.softDeleteInvoices)
+  handle('pickImportFile', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Wybierz plik z fakturami',
+      buttonLabel: 'Wczytaj',
+      properties: ['openFile'],
+      filters: [{ name: 'Plik CSV', extensions: ['csv', 'txt'] }]
+    })
+    const path = result.filePaths[0]
+    return result.canceled || !path ? null : { fileName: basename(path), bytes: new Uint8Array(readFileSync(path)) }
+  })
+  handle('saveImportTemplate', async () => {
+    const result = await dialog.showSaveDialog({
+      title: 'Zapisz wzór pliku',
+      defaultPath: join(app.getPath('documents'), 'wzor-importu-faktur.csv'),
+      filters: [{ name: 'Plik CSV', extensions: ['csv'] }]
+    })
+    if (result.canceled || !result.filePath) return null
+    // UTF-8 with a BOM, so Excel shows Polish letters correctly.
+    writeFileSync(result.filePath, Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(IMPORT_TEMPLATE, 'utf8')]))
+    return result.filePath
+  })
   handle('findDuplicate', repo.findDuplicate)
 
   handle('listSuppliers', repo.listSuppliers)

@@ -123,6 +123,11 @@ export interface Api {
   saveInvoice(input: InvoiceInput): Promise<Invoice>
   deleteInvoice(id: number): Promise<void>
   restoreInvoice(id: number): Promise<void>
+  /** Bulk import: takes a backup first, adds everything in one transaction, returns the new ids. */
+  importInvoices(inputs: InvoiceInput[]): Promise<{ ids: number[]; backupError: string | null }>
+  deleteInvoices(ids: number[]): Promise<void>
+  pickImportFile(): Promise<{ fileName: string; bytes: Uint8Array } | null>
+  saveImportTemplate(): Promise<string | null>
   findDuplicate(input: { id?: number; supplierNip: string; supplierName: string; number: string }): Promise<Invoice | null>
 
   listSuppliers(): Promise<Supplier[]>

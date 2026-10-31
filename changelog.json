@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.3.0",
+    "date": "2026-10-31",
+    "pl": [
+      "Wczytywanie wielu faktur naraz z pliku (Ustawienia → „Wczytaj faktury z pliku”) — np. starszych faktur przepisanych z zeszytu. Przed zapisaniem widać podgląd, duplikaty są pomijane, a cały import można cofnąć."
+    ],
+    "en": [
+      "Import many invoices at once from a file (Settings → \"Wczytaj faktury z pliku\") — e.g. older invoices transcribed from the notebook. A preview is shown first, duplicates are skipped and the whole import can be undone."
+    ]
+  },
+  {
     "version": "0.2.1",
     "date": "2026-10-31",
     "pl": [

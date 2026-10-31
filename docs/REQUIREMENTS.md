@@ -33,6 +33,7 @@
 | A5 | Highlight every pre-filled field until the user has checked it | ✅ 0.1 |
 | A6 | Remember suppliers: fill the name from a known NIP and suggest the last-used category and payment method | ✅ 0.1 |
 | A12 | Payment method (bank transfer / cash) as its own dropdown, also read from "Sposób płatności" | ✅ 0.2 |
+| A13 | Bulk import from CSV with preview, duplicate detection, a backup right before saving and undo ([IMPORT.md](IMPORT.md)) | ✅ 0.3 |
 | A7 | Entries without an invoice ("note or other document") and without a file | ✅ 0.1 |
 | A8 | Easy way to get photos from an Android phone into the app | 🔜 planned (see below) |
 | A9 | Attach more than one file to an invoice (e.g. invoice + payment confirmation) | 🔜 planned |

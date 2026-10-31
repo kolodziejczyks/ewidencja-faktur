@@ -15,6 +15,10 @@ const api: Api = {
   saveInvoice: call('saveInvoice'),
   deleteInvoice: call('deleteInvoice'),
   restoreInvoice: call('restoreInvoice'),
+  importInvoices: call('importInvoices'),
+  deleteInvoices: call('deleteInvoices'),
+  pickImportFile: call('pickImportFile'),
+  saveImportTemplate: call('saveImportTemplate'),
   findDuplicate: call('findDuplicate'),
 
   listSuppliers: call('listSuppliers'),

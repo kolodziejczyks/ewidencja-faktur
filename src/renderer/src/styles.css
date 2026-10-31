@@ -855,6 +855,7 @@ textarea.input {
 .table td.num,
 .table th.num {
   text-align: right;
+  white-space: nowrap;
 }
 
 .bar-list {

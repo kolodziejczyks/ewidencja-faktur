@@ -7,7 +7,7 @@
  */
 import { _electron as electron } from 'playwright-core'
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -147,9 +147,41 @@ await page.emulateMedia({ media: 'print' })
 await page.screenshot({ path: join(shots, '09-print-preview.png'), fullPage: true })
 await page.emulateMedia({ media: 'screen' })
 
+// CSV import: one new row, one duplicate of the manual entry above, one broken row
+const csvPath = join(work, 'zeszyt.csv')
+const today = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+writeFileSync(
+  csvPath,
+  [
+    'data;dostawca;numer;kwota;forma_platnosci;kategoria',
+    '02.09.2026;Hurtownia Napojów Zdrój;Z/12/2026;845,10;przelew;Towar do sklepu',
+    `${today};Hurtownia Owoców Jabłonka;FV/77/2026;312,40;gotówka;`,
+    ';Bez daty;;10,00;;'
+  ].join('\r\n')
+)
+await app.evaluate(({ dialog }, p) => {
+  dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [p] })
+}, csvPath)
+const countInvoices = () => page.evaluate(async () => (await window.api.listInvoices()).length)
+const before = await countInvoices()
+await page.click('nav >> text=Ustawienia')
+await page.click('button:has-text("Wczytaj faktury z pliku")')
+await page.click('button:has-text("Wybierz plik CSV")')
+await page.waitForSelector('text=Sprawdź, co zostanie dodane')
+check('import: duplicate recognised', await page.isVisible('text=Już jest w programie'), true)
+check('import: broken row reported', await page.isVisible('text=Brak daty.'), true)
+await page.screenshot({ path: join(shots, '10-import-preview.png'), fullPage: true })
+await page.click('button:has-text("Dodaj 1 fakturę")')
+await page.waitForSelector('text=Dodano 1 fakturę')
+check('import: one invoice added', (await countInvoices()) - before, 1)
+await page.click('button:has-text("Cofnij ten import")')
+await page.click('.modal >> button:has-text("Tak, cofnij")')
+await page.waitForSelector('text=Cofnięto import')
+check('import: undo removes it again', (await countInvoices()) - before, 0)
+
 await page.click('nav >> text=Ustawienia')
 await page.click('button:has-text("Co nowego w programie")')
-await page.screenshot({ path: join(shots, '10-settings.png'), fullPage: true })
+await page.screenshot({ path: join(shots, '11-settings.png'), fullPage: true })
 
 // Update banner, as the user would see it once an update has downloaded — with real, long notes
 const releaseNotes = readFileSync(join(root, 'build/release-notes.md'), 'utf8')
@@ -159,11 +191,11 @@ await app.evaluate(({ BrowserWindow }, notes) => {
 await page.click('nav >> text=Faktury')
 const banner = await page.locator('.update-banner').boundingBox()
 check('update banner stays compact', banner != null && banner.height < 140, true)
-await page.screenshot({ path: join(shots, '11-update-banner.png') })
+await page.screenshot({ path: join(shots, '12-update-banner.png') })
 await page.click('.update-banner >> button:has-text("Co nowego?")')
 check('release notes dialog lists the Polish changes', (await page.locator('.notes-list li').count()) > 0, true)
 check('release notes dialog has no English part', await page.isVisible('.notes-list >> text=What'), false)
-await page.screenshot({ path: join(shots, '12-update-notes.png') })
+await page.screenshot({ path: join(shots, '13-update-notes.png') })
 await page.click('.modal >> button:has-text("Zamknij")')
 
 await app.close()
