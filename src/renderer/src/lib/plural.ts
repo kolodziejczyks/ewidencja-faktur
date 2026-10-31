@@ -9,4 +9,5 @@ export function plural(n: number, [one, few, many]: [string, string, string]): s
 export const INVOICES: [string, string, string] = ['faktura', 'faktury', 'faktur']
 /** After verbs like "dodaj" / "dodano": 1 fakturę, 2 faktury, 5 faktur. */
 export const INVOICES_ACCUSATIVE: [string, string, string] = ['fakturę', 'faktury', 'faktur']
+export const PAGES: [string, string, string] = ['kartka', 'kartki', 'kartek']
 export const ENTRIES: [string, string, string] = ['wpis', 'wpisy', 'wpisów']

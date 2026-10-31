@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { formatMoney, moneyToInput, parseMoney } from '../src/shared/money'
 import { formatNip, isValidNip } from '../src/shared/nip'
 import { computeFlags } from '../src/shared/insights'
-import { compareMonths, monthSeries } from '../src/shared/summary'
+import { compareMonths, monthSeries, topWithRest, totalsByPeriod } from '../src/shared/summary'
 
 describe('money', () => {
   it.each([
@@ -62,6 +62,25 @@ describe('summary', () => {
 
   it('builds a month series including empty months', () => {
     expect(monthSeries(data, '2026-11', 3).map((m) => m.total)).toEqual([1000, 2000, 0])
+  })
+
+  it('totals per day and per month with the payment split', () => {
+    const paid = [
+      { ...inv('2026-09-03', 'A', 1000), paymentMethod: 'cash' as const },
+      { ...inv('2026-10-03', 'A', 1500), paymentMethod: 'transfer' as const },
+      { ...inv('2026-10-03', 'B', 500), paymentMethod: 'cash' as const }
+    ]
+    expect(totalsByPeriod(paid, 'month')).toEqual([
+      { key: '2026-09', count: 1, cash: 1000, transfer: 0, total: 1000 },
+      { key: '2026-10', count: 2, cash: 500, transfer: 1500, total: 2000 }
+    ])
+    expect(totalsByPeriod(paid, 'day').map((p) => p.key)).toEqual(['2026-09-03', '2026-10-03'])
+  })
+
+  it('folds small groups into "Pozostali"', () => {
+    const groups = [5, 4, 3, 2, 1].map((t, i) => ({ name: `S${i}`, total: t, count: 1 }))
+    expect(topWithRest(groups, 2)).toEqual([groups[0], groups[1], { name: 'Pozostali (3)', total: 6, count: 3 }])
+    expect(topWithRest(groups, 4)).toEqual(groups)
   })
 
   it('compares two months per supplier', () => {

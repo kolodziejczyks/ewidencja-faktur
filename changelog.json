@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.4.0",
+    "date": "2026-10-31",
+    "pl": [
+      "Nowy wydruk skrócony „na jednej kartce”: sumy według dni albo miesięcy, kategorii i dostawców — zamiast wielu stron z każdą fakturą. Dla kwartału i całego roku wybiera się sam.",
+      "Przy wydruku wszystkich faktur widać, na ilu mniej więcej kartkach się zmieści."
+    ],
+    "en": [
+      "New one-page summary printout: totals per day or month, per category and per supplier instead of many pages listing every invoice. Chosen automatically for a quarter or a whole year.",
+      "When printing the full list, the app shows roughly how many pages it will take."
+    ]
+  },
+  {
     "version": "0.3.0",
     "date": "2026-10-31",
     "pl": [

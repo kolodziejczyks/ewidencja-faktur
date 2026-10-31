@@ -1104,6 +1104,54 @@ textarea.input {
   border-top: 2px solid #000;
 }
 
+/* One-page summary: smaller type, two columns */
+
+.print-compact {
+  font-size: 13px;
+}
+
+.print-compact .print-table th,
+.print-compact .print-table td {
+  padding: 3px 6px;
+  /* One line per row keeps the summary on a single page. */
+  white-space: nowrap;
+}
+
+.print-kpis {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.print-kpis > div {
+  flex: 1;
+  border: 1px solid #999;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.print-kpis strong {
+  font-size: 1.35em;
+}
+
+.print-columns {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.print-group {
+  margin-bottom: 12px;
+}
+
+@media print {
+  .print-compact {
+    font-size: 9.5pt;
+  }
+}
+
 @media print {
   @page {
     size: A4;

@@ -71,6 +71,40 @@ export function totalsBy(invoices: SummaryInput[], keyOf: (inv: SummaryInput) =>
   return [...map.values()].sort((a, b) => b.total - a.total)
 }
 
+export interface PeriodTotal {
+  /** `YYYY-MM-DD` for days, `YYYY-MM` for months */
+  key: string
+  count: number
+  cash: number
+  transfer: number
+  total: number
+}
+
+/** Totals per day or per month, oldest first, only for periods that have entries. */
+export function totalsByPeriod(invoices: SummaryInput[], period: 'day' | 'month'): PeriodTotal[] {
+  const map = new Map<string, PeriodTotal>()
+  for (const inv of invoices) {
+    const key = period === 'day' ? inv.issueDate : monthKey(inv.issueDate)
+    const t = map.get(key) ?? { key, count: 0, cash: 0, transfer: 0, total: 0 }
+    t.count += 1
+    t.total += amount(inv)
+    if (inv.paymentMethod === 'cash') t.cash += amount(inv)
+    if (inv.paymentMethod === 'transfer') t.transfer += amount(inv)
+    map.set(key, t)
+  }
+  return [...map.values()].sort((a, b) => a.key.localeCompare(b.key))
+}
+
+/** The biggest `limit` groups, with everything else folded into one "Pozostali" row. */
+export function topWithRest(groups: GroupTotal[], limit: number, restLabel = 'Pozostali'): GroupTotal[] {
+  if (groups.length <= limit + 1) return groups
+  const rest = groups.slice(limit)
+  return [
+    ...groups.slice(0, limit),
+    { name: `${restLabel} (${rest.length})`, total: rest.reduce((s, g) => s + g.total, 0), count: rest.reduce((s, g) => s + g.count, 0) }
+  ]
+}
+
 export function invoicesInMonth<T extends SummaryInput>(invoices: T[], month: string): T[] {
   return invoices.filter((inv) => monthKey(inv.issueDate) === month)
 }

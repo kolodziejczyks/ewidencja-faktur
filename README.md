@@ -37,8 +37,8 @@ English.
   far above what a supplier usually charges.
 - **Summary** — costs per month vs. the year before, transfer vs. cash, top suppliers, categories,
   and a per-supplier comparison with the previous month.
-- **Ready to print** — an A4 list of invoices for the last 10 days, this month, last month, last
-  quarter or this year, with totals split by payment method.
+- **Ready to print** — for the last 10 days, this month, last month, last quarter or this year:
+  either every invoice, or a one-page summary (per day or month, per category, top suppliers).
 - **CSV import** of many invoices at once (e.g. history transcribed from the notebook), with a
   preview, duplicate detection and one-click undo — see [docs/IMPORT.md](docs/IMPORT.md).
 - **Safe by default** — no save button to forget, a 30-day recycle bin, daily automatic backups
