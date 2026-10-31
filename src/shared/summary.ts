@@ -114,10 +114,10 @@ export function percentChange(current: number, previous: number): number | null 
   return Math.round(((current - previous) / previous) * 100)
 }
 
-/** Per-supplier comparison of two months, biggest changes first. */
-export function compareMonths(invoices: SummaryInput[], monthA: string, monthB: string): MonthComparisonRow[] {
-  const a = new Map(totalsBy(invoicesInMonth(invoices, monthA), (i) => i.supplierName).map((g) => [g.name, g.total]))
-  const b = new Map(totalsBy(invoicesInMonth(invoices, monthB), (i) => i.supplierName).map((g) => [g.name, g.total]))
+/** Per-supplier comparison of two periods' invoices, biggest changes first. */
+export function compareSuppliers(before: SummaryInput[], after: SummaryInput[]): MonthComparisonRow[] {
+  const a = new Map(totalsBy(before, (i) => i.supplierName).map((g) => [g.name, g.total]))
+  const b = new Map(totalsBy(after, (i) => i.supplierName).map((g) => [g.name, g.total]))
   const names = new Set([...a.keys(), ...b.keys()])
   return [...names]
     .map((name) => {

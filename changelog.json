@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.5.0",
+    "date": "2026-10-31",
+    "pl": [
+      "Podsumowanie można teraz oglądać nie tylko za miesiąc, ale też za cały kwartał albo cały rok — wystarczy wybrać „Miesiąc”, „Kwartał” lub „Rok” i przechodzić strzałkami.",
+      "Wydruki są zawsze w pionie, na kartce A4, a podgląd na ekranie wygląda jak wydrukowana kartka."
+    ],
+    "en": [
+      "The summary can now show a whole quarter or year, not just a month — pick “Miesiąc”, “Kwartał” or “Rok” and move with the arrows.",
+      "Printouts are always portrait A4, and the on-screen preview looks like the printed page."
+    ]
+  },
+  {
     "version": "0.4.1",
     "date": "2026-10-31",
     "pl": [

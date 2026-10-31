@@ -1,7 +1,7 @@
 {
   "name": "ewidencja-faktur",
   "productName": "Ewidencja Faktur",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Simple offline invoice ledger for Windows, designed for non-technical users.",
   "author": "kolodziejczyks",
   "license": "MIT",

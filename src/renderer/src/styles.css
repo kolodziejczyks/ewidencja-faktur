@@ -884,6 +884,14 @@ textarea.input {
   border-radius: 0 4px 4px 0;
 }
 
+.period-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px 20px;
+}
+
 .month-picker {
   display: flex;
   align-items: center;
@@ -1030,13 +1038,20 @@ textarea.input {
 
 /* ---------- print ---------- */
 
+/* On screen the sheet is drawn as a portrait A4 page with the print margins, so the preview
+   matches the paper. */
 .print-sheet {
+  box-sizing: border-box;
+  width: 210mm;
+  max-width: 100%;
+  min-height: 297mm;
+  margin: 0 auto;
   background: white;
   border: 1px solid var(--line);
   border-radius: 6px;
   box-shadow: var(--shadow);
-  padding: 40px 44px;
-  font-size: 15px;
+  padding: 14mm;
+  font-size: 11pt;
   color: #000;
 }
 
@@ -1106,8 +1121,8 @@ textarea.input {
 
 /* One-page summary: smaller type, two columns */
 
-.print-compact {
-  font-size: 13px;
+.print-sheet.print-compact {
+  font-size: 9.5pt;
 }
 
 .print-compact .print-table th,
@@ -1147,14 +1162,9 @@ textarea.input {
 }
 
 @media print {
-  .print-compact {
-    font-size: 9.5pt;
-  }
-}
-
-@media print {
+  /* "portrait" fixes the orientation; without it the dialog takes the printer's default, which can be landscape. */
   @page {
-    size: A4;
+    size: A4 portrait;
     margin: 14mm;
   }
 
@@ -1182,9 +1192,10 @@ textarea.input {
   }
 
   .print-sheet {
+    width: auto;
+    min-height: 0;
     border: 0;
     box-shadow: none;
     padding: 0;
-    font-size: 11pt;
   }
 }

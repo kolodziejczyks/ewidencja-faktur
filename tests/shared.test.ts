@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { formatMoney, moneyToInput, parseMoney } from '../src/shared/money'
 import { formatNip, isValidNip } from '../src/shared/nip'
 import { computeFlags } from '../src/shared/insights'
-import { compareMonths, monthSeries, topWithRest, totalsByPeriod } from '../src/shared/summary'
+import { periodLabel, periodOf, inPeriodPhrase, invoicesInPeriod, lastDayOf, shiftPeriod } from '../src/shared/periods'
+import { compareSuppliers, invoicesInMonth, monthSeries, topWithRest, totalsByPeriod } from '../src/shared/summary'
 
 describe('money', () => {
   it.each([
@@ -82,9 +83,35 @@ describe('summary', () => {
   })
 
   it('compares two months per supplier', () => {
-    expect(compareMonths(data, '2026-09', '2026-10')).toEqual([
+    expect(compareSuppliers(invoicesInMonth(data, '2026-09'), invoicesInMonth(data, '2026-10'))).toEqual([
       { name: 'A', a: 1000, b: 1500, diff: 500, percent: 50 },
       { name: 'B', a: 0, b: 500, diff: 500, percent: null }
     ])
+  })
+})
+
+describe('periods', () => {
+  it('finds the month, quarter and year of a date', () => {
+    expect(periodOf('month', '2026-10-31')).toEqual({ kind: 'month', start: '2026-10' })
+    expect(periodOf('quarter', '2026-08-15')).toEqual({ kind: 'quarter', start: '2026-07' })
+    expect(periodOf('year', '2026-08-15')).toEqual({ kind: 'year', start: '2026-01' })
+  })
+
+  it('moves between periods across years', () => {
+    expect(shiftPeriod({ kind: 'quarter', start: '2026-01' }, -1)).toEqual({ kind: 'quarter', start: '2025-10' })
+    expect(shiftPeriod({ kind: 'year', start: '2026-01' }, -1)).toEqual({ kind: 'year', start: '2025-01' })
+  })
+
+  it('names periods', () => {
+    expect(periodLabel({ kind: 'quarter', start: '2026-10' })).toBe('IV kwartał 2026')
+    expect(periodLabel({ kind: 'year', start: '2026-01' })).toBe('Rok 2026')
+    expect(inPeriodPhrase({ kind: 'month', start: '2026-09' })).toBe('we wrześniu')
+    expect(inPeriodPhrase({ kind: 'quarter', start: '2026-07' })).toBe('w III kwartale')
+    expect(lastDayOf({ kind: 'quarter', start: '2024-01' })).toBe('2024-03-31')
+  })
+
+  it('selects the invoices of a quarter', () => {
+    const rows = ['2026-06-30', '2026-07-01', '2026-09-30', '2026-10-01'].map((issueDate) => ({ issueDate }))
+    expect(invoicesInPeriod(rows, { kind: 'quarter', start: '2026-07' }).map((r) => r.issueDate)).toEqual(['2026-07-01', '2026-09-30'])
   })
 })

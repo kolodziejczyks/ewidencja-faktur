@@ -53,7 +53,7 @@
 | ID | Requirement | Status |
 |---|---|---|
 | C1 | Month total compared with the previous month in the ledger | ✅ 0.1 |
-| C2 | Summary: chosen month vs previous month vs same month a year ago | ✅ 0.1 |
+| C2 | Summary: chosen month, quarter or year vs the previous period and the same period a year ago | ✅ 0.1 (quarter/year 0.5) |
 | C3 | Chart of the last 12 months against the 12 months before | ✅ 0.1 |
 | C4 | Breakdown by supplier and by category | ✅ 0.1 |
 | C5 | Per-supplier differences between two consecutive months | ✅ 0.1 |
@@ -67,7 +67,7 @@
 |---|---|---|
 | D1 | Printable A4 list for: last 10 calendar days (default), this month, last month, last full quarter, this year | ✅ 0.2 |
 | D2 | Totals on the printout: overall, by transfer, by cash | ✅ 0.2 |
-| D5 | One-page summary printout (per day or month, per category, top 10 suppliers); default for a quarter or a year; page estimate for the full list | ✅ 0.4 |
+| D5 | One-page summary printout (per day or month, per category, top 10 suppliers); default for a quarter or a year; page estimate for the full list; always portrait A4 | ✅ 0.4 |
 | D3 | ~~Excel export~~ | replaced by printing in 0.2 |
 | D4 | ZIP package for the accountant (list + all files of the period) | 💡 idea |
 
