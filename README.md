@@ -33,8 +33,7 @@ English.
   Every guessed field is highlighted so it gets checked before saving.
 - **The notebook view** — entries grouped by month with totals and month-over-month change,
   one search box, filter by payment method.
-- **Warnings** — likely duplicates (same supplier + number, or the same file twice) and amounts
-  far above what a supplier usually charges.
+- **Duplicate warnings** — same supplier and invoice number, or the same file added twice.
 - **Summary** — costs per month vs. the year before, transfer vs. cash, top suppliers, categories,
   and a per-supplier comparison with the previous month.
 - **Ready to print** — for the last 10 days, this month, last month, last quarter or this year:

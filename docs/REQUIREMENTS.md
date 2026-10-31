@@ -58,7 +58,7 @@
 | C4 | Breakdown by supplier and by category | ✅ 0.1 |
 | C5 | Per-supplier differences between two consecutive months | ✅ 0.1 |
 | C6 | Duplicate warning (same supplier + number, or the same file) while entering and in the ledger | ✅ 0.1 |
-| C7 | Unusual amount warning (≥ 1.5× the median of the supplier's last 6 invoices) | ✅ 0.1 |
+| C7 | ~~Unusual amount warning (≥ 1.5× the supplier's median)~~ | removed in 0.4.1 — on real data it flagged every sixth invoice, almost all ordinary larger deliveries |
 | C8 | ~~Overdue / due-in-3-days reminders~~ | removed in 0.2 — only paid invoices are recorded |
 | C9 | Transfer vs. cash totals for the chosen month | ✅ 0.2 |
 

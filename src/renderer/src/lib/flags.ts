@@ -8,7 +8,5 @@ export function flagLabel(flag: InvoiceFlag): { text: string; tone: Tone; icon: 
   switch (flag.type) {
     case 'duplicate':
       return { text: 'Możliwy duplikat', tone: 'warn', icon: '⧉' }
-    case 'unusualAmount':
-      return { text: `Kwota o ${flag.percentAboveTypical}% wyższa niż zwykle`, tone: 'warn', icon: '📈' }
   }
 }

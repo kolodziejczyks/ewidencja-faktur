@@ -115,7 +115,7 @@ await page.evaluate(async () => {
       })
     }
   }
-  // An electricity bill that is much higher than usual
+  // An electricity bill much higher than usual — no longer flagged as anything special
   await window.api.saveInvoice({
     kind: 'invoice', number: 'EN/10/2026', supplierName: 'Energa Obrót S.A.', supplierNip: '', issueDate: '2026-10-05',
     dueDate: '2026-10-20', grossAmount: 152000, netAmount: null, categoryId: catId(2), paymentMethod: 'transfer', note: '', fileIds: []
@@ -124,7 +124,7 @@ await page.evaluate(async () => {
 await page.reload()
 await page.waitForSelector('text=Wrzesień 2026')
 await page.screenshot({ path: join(shots, '05-ledger.png') })
-check('unusual amount flagged', await page.isVisible('text=Kwota o'), true)
+check('no unusual-amount warnings', await page.isVisible('text=wyższa niż zwykle'), false)
 check('no payment status left', await page.isVisible('text=Do zapłaty'), false)
 
 await page.click('button.entry:has-text("Hurtownia Spożywcza SMAK")')

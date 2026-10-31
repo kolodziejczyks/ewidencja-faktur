@@ -31,9 +31,7 @@ export interface Category {
 /** How the invoice was paid. Every entry is recorded after payment, so there is no "unpaid" state. */
 export type PaymentMethod = 'transfer' | 'cash'
 
-export type InvoiceFlag =
-  | { type: 'duplicate'; otherId: number }
-  | { type: 'unusualAmount'; percentAboveTypical: number }
+export type InvoiceFlag = { type: 'duplicate'; otherId: number }
 
 export interface Invoice {
   id: number

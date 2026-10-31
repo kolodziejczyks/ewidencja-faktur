@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.4.1",
+    "date": "2026-10-31",
+    "pl": [
+      "Usunięto dopisek „Kwota o …% wyższa niż zwykle” — przy dostawach towaru kwoty naturalnie się zmieniają, więc tylko wprowadzał zamieszanie."
+    ],
+    "en": [
+      "Removed the “amount …% higher than usual” note — delivery amounts naturally vary, so it only caused confusion."
+    ]
+  },
+  {
     "version": "0.4.0",
     "date": "2026-10-31",
     "pl": [

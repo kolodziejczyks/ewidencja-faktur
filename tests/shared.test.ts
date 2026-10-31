@@ -45,12 +45,10 @@ describe('computeFlags', () => {
     expect(flags.get(3)).toBeUndefined()
   })
 
-  it('flags amounts far above the supplier median', () => {
+  it('does not flag amounts, however much they vary', () => {
     const amounts = [10000, 11000, 9000, 10500, 20000]
     const invoices = amounts.map((a, i) => ({ ...base, id: i + 1, supplierId: 1, issueDate: `2026-0${i + 1}-10`, grossAmount: a }))
-    const flags = computeFlags(invoices)
-    expect(flags.get(5)).toEqual([{ type: 'unusualAmount', percentAboveTypical: 95 }])
-    expect(flags.get(4)).toBeUndefined()
+    expect(computeFlags(invoices).size).toBe(0)
   })
 })
 
