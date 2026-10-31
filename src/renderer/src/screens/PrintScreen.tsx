@@ -17,16 +17,14 @@ import { INVOICES, PAGES, plural } from '../lib/plural'
 
 type Layout = 'detailed' | 'summary'
 
-/** Long periods print as a summary by default; the user can always switch. */
-const defaultLayout = (id: PrintRangeId): Layout => (id === 'lastQuarter' || id === 'thisYear' ? 'summary' : 'detailed')
-
 /** Rough number of A4 pages the full list needs (about 25 rows a page — rows with a NIP take two lines). */
 const estimatePages = (rows: number) => Math.max(1, Math.ceil((rows + 6) / 25))
 
 export function PrintScreen({ data }: { data: AppData }) {
   const ranges = printRanges(today())
   const [rangeId, setRangeId] = useState<PrintRangeId>('last10Days')
-  const [layout, setLayout] = useState<Layout>(defaultLayout('last10Days'))
+  // The one-page summary is the default; the full list is one click away and stays chosen when the period changes.
+  const [layout, setLayout] = useState<Layout>('summary')
   const [custom, setCustom] = useState({ from: ranges[0].from, to: ranges[0].to })
   // Dates typed the wrong way round are simply swapped.
   const [customFrom, customTo] = custom.from <= custom.to ? [custom.from, custom.to] : [custom.to, custom.from]
@@ -52,10 +50,7 @@ export function PrintScreen({ data }: { data: AppData }) {
               <button
                 key={r.id}
                 className={`btn ${r.id === rangeId ? 'btn-primary' : ''}`}
-                onClick={() => {
-                  setRangeId(r.id)
-                  setLayout(defaultLayout(r.id))
-                }}
+                onClick={() => setRangeId(r.id)}
               >
                 {r.label}
               </button>

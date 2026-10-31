@@ -67,7 +67,7 @@
 |---|---|---|
 | D1 | Printable A4 list for: last 10 calendar days (default), this month, last month, last full quarter, this year | ✅ 0.2 |
 | D2 | Totals on the printout: overall, by transfer, by cash | ✅ 0.2 |
-| D5 | One-page summary printout (per day or month, per category, top 10 suppliers); default for a quarter or a year; page estimate for the full list; always portrait A4 | ✅ 0.4 |
+| D5 | One-page summary printout (per day or month, per category, top 10 suppliers); the default printout for every period (since 0.6.1); page estimate for the full list; always portrait A4 | ✅ 0.4 |
 | D6 | Any date range picked from a calendar; the printout names the period in words in large type, with dates, count, total and page numbers | ✅ 0.6 |
 | D3 | ~~Excel export~~ | replaced by printing in 0.2 |
 | D4 | ZIP package for the accountant (list + all files of the period) | 💡 idea |

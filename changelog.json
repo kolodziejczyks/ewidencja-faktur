@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.6.1",
+    "date": "2026-10-31",
+    "pl": [
+      "Do druku: domyślnie zaznaczony jest teraz wydruk skrócony na jednej kartce, dla każdego okresu. Pełną listę faktur wybiera się jednym kliknięciem."
+    ],
+    "en": [
+      "Printing: the one-page summary is now the default for every period. The full invoice list is one click away."
+    ]
+  },
+  {
     "version": "0.6.0",
     "date": "2026-10-31",
     "pl": [
