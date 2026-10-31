@@ -8,7 +8,6 @@
 │  repository.ts  invoices, suppliers…    InvoiceForm, Preview     │
 │  documents.ts   file import, DOCX       lib/pdf.ts  (pdf.js)     │
 │  ocr.ts         Tesseract worker        lib/extract.ts           │
-│  exportExcel.ts ExcelJS                                          │
 │  backup.ts      snapshots + mirror      ▲                        │
 │  updater.ts     electron-updater        │ window.api (preload)   │
 │  ipc.ts  ◄──────────────────────────────┘                        │
@@ -37,6 +36,9 @@ Everything lives in `%APPDATA%\Ewidencja Faktur`:
 The database uses Node's built-in `node:sqlite` (available in Electron's Node 24), so there are
 no native modules to rebuild. Schema changes are append-only migrations tracked with
 `PRAGMA user_version` (see `src/main/db.ts`).
+
+Only paid invoices are recorded, so `invoices.paid` / `paid_date` are legacy columns that are
+always filled in; `payment_method` (`transfer` / `cash`) says how it was paid.
 
 Tables: `invoices`, `suppliers` (unique by NIP), `categories`, `files` (with SHA-256 for duplicate
 detection), `settings` (key/value). Money is stored as integer grosze; dates as `YYYY-MM-DD`.
@@ -92,5 +94,5 @@ Documents.
   aggregations.
 - `tests/e2e/smoke.mjs` (Playwright for Electron) — generates a sample PDF and PNG invoice,
   imports both through the UI, asserts every parsed field (including OCR), seeds a year of data,
-  exports to Excel and takes screenshots of each screen. Set `EWF_EXE` to run it against a
+  checks the print view (also in print media) and takes screenshots of each screen. Set `EWF_EXE` to run it against a
   packaged build. Runs use a throwaway data folder via `EWF_USER_DATA`.

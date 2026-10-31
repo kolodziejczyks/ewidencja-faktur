@@ -1,9 +1,8 @@
 /** All reads and writes of invoices, suppliers, categories and files. */
 
 import { computeFlags, normalizeInvoiceNumber } from '@shared/insights'
-import { today } from '@shared/dates'
 import { normalizeNip } from '@shared/nip'
-import type { Category, Invoice, InvoiceInput, StoredFile, Supplier } from '@shared/types'
+import type { Category, Invoice, InvoiceInput, PaymentMethod, StoredFile, Supplier } from '@shared/types'
 import { getDb, nowIso } from './db'
 
 interface InvoiceRow {
@@ -19,8 +18,7 @@ interface InvoiceRow {
   net_amount: number | null
   category_id: number | null
   category_name: string | null
-  paid: number
-  paid_date: string | null
+  payment_method: PaymentMethod | null
   note: string
   created_at: string
   updated_at: string
@@ -70,8 +68,7 @@ function toInvoice(row: InvoiceRow, files: StoredFile[]): Invoice {
     netAmount: row.net_amount,
     categoryId: row.category_id,
     categoryName: row.category_name ?? '',
-    paid: row.paid === 1,
-    paidDate: row.paid_date,
+    paymentMethod: row.payment_method,
     note: row.note,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -94,7 +91,7 @@ function loadInvoices(where: string, ...params: (string | number)[]): Invoice[] 
 
 export function listInvoices(): Invoice[] {
   const invoices = loadInvoices('i.deleted_at IS NULL')
-  const flags = computeFlags(invoices, today())
+  const flags = computeFlags(invoices)
   for (const inv of invoices) inv.flags = flags.get(inv.id) ?? []
   return invoices
 }
@@ -143,23 +140,23 @@ export function saveInvoice(input: InvoiceInput): Invoice {
       input.grossAmount,
       input.netAmount,
       input.categoryId,
-      input.paid ? 1 : 0
+      input.paymentMethod,
+      input.note
     ] as const
     let id = input.id
     if (id) {
-      const prev = db.prepare('SELECT paid, paid_date FROM invoices WHERE id = ?').get(id) as { paid: number; paid_date: string | null }
-      const paidDate = input.paid ? (prev.paid ? prev.paid_date : today()) : null
       db.prepare(
         `UPDATE invoices SET kind = ?, number = ?, supplier_id = ?, issue_date = ?, due_date = ?, gross_amount = ?,
-         net_amount = ?, category_id = ?, paid = ?, paid_date = ?, note = ?, updated_at = ? WHERE id = ?`
-      ).run(...values, paidDate, input.note, now, id)
+         net_amount = ?, category_id = ?, payment_method = ?, note = ?, updated_at = ? WHERE id = ?`
+      ).run(...values, now, id)
     } else {
+      // The legacy paid/paid_date columns stay filled in: every recorded invoice is a paid one.
       const result = db
         .prepare(
           `INSERT INTO invoices (kind, number, supplier_id, issue_date, due_date, gross_amount, net_amount, category_id,
-           paid, paid_date, note, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+           payment_method, note, paid, paid_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`
         )
-        .run(...values, input.paid ? today() : null, input.note, now, now)
+        .run(...values, input.issueDate, now, now)
       id = Number(result.lastInsertRowid)
     }
     for (const fileId of input.fileIds) {
@@ -171,12 +168,6 @@ export function saveInvoice(input: InvoiceInput): Invoice {
     db.exec('ROLLBACK')
     throw e
   }
-}
-
-export function setPaid(id: number, paid: boolean): void {
-  getDb()
-    .prepare('UPDATE invoices SET paid = ?, paid_date = ?, updated_at = ? WHERE id = ?')
-    .run(paid ? 1 : 0, paid ? today() : null, nowIso(), id)
 }
 
 export function softDeleteInvoice(id: number): void {

@@ -2,14 +2,11 @@
 
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { existsSync } from 'node:fs'
-import { join } from 'node:path'
-import { formatDate } from '@shared/dates'
 import { normalizeNip } from '@shared/nip'
 import type { ImportResult, InvoiceInput } from '@shared/types'
 import { backupFolder, getBackupStatus, restoreSnapshot, runBackup, setBackupFolder } from './backup'
 import { getSetting, setSetting } from './db'
 import { absolutePathOf, importFile, readDocx, readStoredFile, SUPPORTED_EXTENSIONS } from './documents'
-import { writeExcel } from './exportExcel'
 import { recognizeText } from './ocr'
 import { dataDir } from './paths'
 import * as repo from './repository'
@@ -29,7 +26,6 @@ export function registerIpc(): void {
   handle('listDeletedInvoices', repo.listDeletedInvoices)
   handle('getInvoice', repo.getInvoice)
   handle('saveInvoice', (input: InvoiceInput) => repo.saveInvoice(input))
-  handle('setPaid', repo.setPaid)
   handle('deleteInvoice', repo.softDeleteInvoice)
   handle('restoreInvoice', repo.restoreInvoice)
   handle('findDuplicate', repo.findDuplicate)
@@ -60,21 +56,7 @@ export function registerIpc(): void {
   handle('ocrFile', (fileId: number) => recognizeText(readStoredFile(fileId)))
   handle('ocrImage', (png: Uint8Array) => recognizeText(png))
 
-  handle('exportExcel', async (range: { from: string; to: string }) => {
-    const win = BrowserWindow.getFocusedWindow()
-    const options: Electron.SaveDialogOptions = {
-      title: 'Zapisz zestawienie',
-      buttonLabel: 'Zapisz',
-      defaultPath: join(app.getPath('documents'), `Faktury ${formatDate(range.from)} - ${formatDate(range.to)}.xlsx`),
-      filters: [{ name: 'Excel', extensions: ['xlsx'] }]
-    }
-    const result = win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options)
-    if (result.canceled || !result.filePath) return null
-    await writeExcel(repo.listInvoices(), range, result.filePath)
-    return result.filePath
-  })
   handle('openPath', async (path: string) => void (existsSync(path) && (await shell.openPath(path))))
-  handle('showInFolder', (path: string) => shell.showItemInFolder(path))
 
   handle('getSettings', () => ({
     ownNip: getSetting('ownNip'),

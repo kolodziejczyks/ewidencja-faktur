@@ -9,6 +9,7 @@
 import { parseMoney } from './money'
 import { isValidIsoDate, addDays } from './dates'
 import { isValidNip, normalizeNip } from './nip'
+import type { PaymentMethod } from './types'
 
 export interface ParsedInvoice {
   number: string | null
@@ -18,6 +19,7 @@ export interface ParsedInvoice {
   dueDate: string | null
   grossAmount: number | null
   netAmount: number | null
+  paymentMethod: PaymentMethod | null
 }
 
 export interface ParseOptions {
@@ -69,8 +71,20 @@ export function parseInvoiceText(rawText: string, options: ParseOptions = {}): P
     issueDate,
     dueDate: findDueDate(text, issueDate),
     grossAmount: gross,
-    netAmount: net
+    netAmount: net,
+    paymentMethod: findPaymentMethod(text)
   }
+}
+
+// ---------- payment method ----------
+
+/** "Sposób płatności: przelew" / "Forma płatności: gotówka". Card payments are left for the user to choose. */
+function findPaymentMethod(text: string): PaymentMethod | null {
+  const m = text.match(/(?:spos[óo]b|forma|rodzaj)\s+(?:p[łl]atno[śs]ci|zap[łl]aty)\s*:?\s*([a-ząćęłńóśźż]+)/i)
+  if (!m) return null
+  if (/^przelew/i.test(m[1])) return 'transfer'
+  if (/^got[óo]wk/i.test(m[1])) return 'cash'
+  return null
 }
 
 // ---------- NIP & supplier ----------

@@ -13,7 +13,6 @@ const api: Api = {
   listDeletedInvoices: call('listDeletedInvoices'),
   getInvoice: call('getInvoice'),
   saveInvoice: call('saveInvoice'),
-  setPaid: call('setPaid'),
   deleteInvoice: call('deleteInvoice'),
   restoreInvoice: call('restoreInvoice'),
   findDuplicate: call('findDuplicate'),
@@ -32,9 +31,7 @@ const api: Api = {
   ocrFile: call('ocrFile'),
   ocrImage: call('ocrImage'),
 
-  exportExcel: call('exportExcel'),
   openPath: call('openPath'),
-  showInFolder: call('showInFolder'),
 
   getSettings: call('getSettings'),
   setOwnNip: call('setOwnNip'),

@@ -1,6 +1,7 @@
 /**
- * Adding invoices: drop or pick one or more files, then go through them one by one —
- * document on the left, form on the right, with fields pre-filled from the document.
+ * Adding invoices. The default is typing an invoice in by hand; a file (PDF, photo, Word) can be
+ * added from the side panel, in which case the document is shown next to the form and the
+ * fields are pre-filled from it. Several files are gone through one by one.
  */
 
 import { useEffect, useMemo, useState } from 'react'
@@ -22,15 +23,14 @@ interface Props {
   notify: (message: string) => void
 }
 
-type Item = ImportResult | { manual: true }
-
 export function AddScreen({ data, incoming, onIncomingConsumed, onImport, onOpenInvoice, notify }: Props) {
-  const [queue, setQueue] = useState<Item[]>([])
+  const [queue, setQueue] = useState<ImportResult[]>([])
+  // Bumped after every save so the manual form starts empty again.
+  const [entryNumber, setEntryNumber] = useState(0)
   const [suggestion, setSuggestion] = useState<Partial<FormValues> | null>(null)
   const [reading, setReading] = useState<ReadingState>({ status: 'idle' })
-  const [dragOver, setDragOver] = useState(false)
-  const current = queue[0]
-  const currentFile = current && 'file' in current ? current.file : null
+  const current = queue[0] ?? null
+  const currentFile = current?.file ?? null
 
   useEffect(() => {
     if (incoming.length === 0) return
@@ -38,8 +38,7 @@ export function AddScreen({ data, incoming, onIncomingConsumed, onImport, onOpen
     onIncomingConsumed()
   }, [incoming, onIncomingConsumed])
 
-  // A fresh, empty form for every document in the queue.
-  const initial = useMemo(() => emptyForm(), [current])
+  const initial = useMemo(() => emptyForm(), [current, entryNumber])
   const files = useMemo(() => (currentFile ? [currentFile] : []), [currentFile])
 
   useEffect(() => {
@@ -64,11 +63,11 @@ export function AddScreen({ data, incoming, onIncomingConsumed, onImport, onOpen
           issueDate: parsed.issueDate ?? undefined,
           dueDate: parsed.dueDate ?? undefined,
           gross: parsed.grossAmount != null ? moneyToInput(parsed.grossAmount) : undefined,
-          net: parsed.netAmount != null ? moneyToInput(parsed.netAmount) : undefined
+          net: parsed.netAmount != null ? moneyToInput(parsed.netAmount) : undefined,
+          paymentMethod: parsed.paymentMethod ?? undefined
         }
-        const found = Object.values(next).filter((v) => v != null).length
         setSuggestion(next)
-        setReading({ status: 'done', found })
+        setReading({ status: 'done', found: Object.values(next).filter((v) => v != null).length })
       } catch (e) {
         console.error('Reading the document failed', e)
         if (!cancelled) setReading({ status: 'failed' })
@@ -80,7 +79,73 @@ export function AddScreen({ data, incoming, onIncomingConsumed, onImport, onOpen
     // eslint-disable-next-line react-hooks/exhaustive-deps -- read each document once
   }, [currentFile?.id])
 
-  const next = () => setQueue((q) => q.slice(1))
+  const next = () => {
+    setQueue((q) => q.slice(1))
+    setEntryNumber((n) => n + 1)
+  }
+
+  const form = (
+    <InvoiceForm
+      initial={initial}
+      suggestion={suggestion}
+      reading={reading}
+      files={files}
+      alreadyAttachedTo={current?.alreadyAttachedTo ?? null}
+      invoices={data.invoices}
+      suppliers={data.suppliers}
+      categories={data.categories}
+      saveLabel={queue.length > 1 ? 'Zapisz i przejdź dalej' : 'Zapisz fakturę'}
+      onSaved={() => {
+        notify(queue.length > 1 ? 'Zapisano ✓  Następny dokument…' : 'Zapisano fakturę ✓  Możesz wpisać następną.')
+        void data.refresh()
+        next()
+      }}
+      onOpenInvoice={onOpenInvoice}
+    >
+      {current && (
+        <button type="button" className="btn btn-large" onClick={next}>
+          {queue.length > 1 ? 'Pomiń ten dokument' : 'Anuluj'}
+        </button>
+      )}
+    </InvoiceForm>
+  )
+
+  if (current) {
+    return (
+      <div className="screen" style={{ maxWidth: 'none' }}>
+        <div className="screen-header">
+          <div>
+            <h1>Dodaj fakturę z pliku</h1>
+            {queue.length > 1 && <p className="queue-info">Zostało jeszcze {queue.length - 1} do dodania po tym dokumencie.</p>}
+          </div>
+        </div>
+        <div className="split">
+          <DocumentPreview files={files} />
+          {form}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="screen">
+      <div className="screen-header">
+        <div>
+          <h1>Dodaj fakturę</h1>
+          <p className="subtitle">Przepisz dane z faktury i kliknij „Zapisz fakturę”.</p>
+        </div>
+      </div>
+      <div className="add-layout">
+        {form}
+        <FileSidePanel onImport={onImport} />
+      </div>
+    </div>
+  )
+}
+
+/** The secondary way in: adding a PDF, photo or Word file that the program tries to read. */
+function FileSidePanel({ onImport }: { onImport: (results: ImportResult[]) => void }) {
+  const [dragOver, setDragOver] = useState(false)
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault()
@@ -90,76 +155,25 @@ export function AddScreen({ data, incoming, onIncomingConsumed, onImport, onOpen
     void window.api.importFiles(paths).then(onImport)
   }
 
-  if (!current) {
-    return (
-      <div className="screen">
-        <div className="screen-header">
-          <div>
-            <h1>Dodaj fakturę</h1>
-            <p className="subtitle">Możesz dodać plik PDF, zdjęcie faktury (JPG, PNG) albo dokument Word.</p>
-          </div>
-        </div>
-        <div
-          className={`dropzone ${dragOver ? 'over' : ''}`}
-          onDragOver={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            setDragOver(true)
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={onDrop}
-        >
-          <div className="big-icon">📥</div>
-          <h2>Przeciągnij tutaj plik z fakturą</h2>
-          <p className="subtitle">albo</p>
-          <div className="btn-row" style={{ justifyContent: 'center', marginTop: 16 }}>
-            <button className="btn btn-primary btn-large" onClick={() => void window.api.pickFiles().then(onImport)}>
-              📂 Wybierz plik z komputera
-            </button>
-            <button className="btn btn-large" onClick={() => setQueue([{ manual: true }])}>
-              ⌨️ Wpisz bez pliku
-            </button>
-          </div>
-          <p className="muted" style={{ marginTop: 20 }}>
-            Można wybrać kilka plików naraz — program przeprowadzi przez nie po kolei.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="screen" style={{ maxWidth: 'none' }}>
-      <div className="screen-header">
-        <div>
-          <h1>Dodaj fakturę</h1>
-          {queue.length > 1 && <p className="queue-info">Zostało jeszcze {queue.length - 1} do dodania po tym dokumencie.</p>}
-        </div>
+    <aside
+      className={`card side-panel ${dragOver ? 'over' : ''}`}
+      onDragOver={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setDragOver(true)
+      }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={onDrop}
+    >
+      <div style={{ fontSize: '2.2rem' }} aria-hidden>
+        📎
       </div>
-      <div className="split">
-        <DocumentPreview files={files} />
-        <InvoiceForm
-          initial={initial}
-          suggestion={suggestion}
-          reading={reading}
-          files={files}
-          alreadyAttachedTo={current && 'file' in current ? current.alreadyAttachedTo : null}
-          invoices={data.invoices}
-          suppliers={data.suppliers}
-          categories={data.categories}
-          saveLabel={queue.length > 1 ? 'Zapisz i przejdź dalej' : 'Zapisz fakturę'}
-          onSaved={() => {
-            notify(queue.length > 1 ? 'Zapisano ✓  Następny dokument…' : 'Zapisano fakturę ✓')
-            void data.refresh()
-            next()
-          }}
-          onOpenInvoice={onOpenInvoice}
-        >
-          <button type="button" className="btn btn-large" onClick={next}>
-            {queue.length > 1 ? 'Pomiń ten dokument' : 'Anuluj'}
-          </button>
-        </InvoiceForm>
-      </div>
-    </div>
+      <h3>Masz fakturę w pliku?</h3>
+      <p className="muted">PDF, zdjęcie albo dokument Word. Program pokaże go obok formularza i spróbuje sam odczytać dane.</p>
+      <button className="btn" onClick={() => void window.api.pickFiles().then(onImport)}>
+        📂 Dodaj z pliku
+      </button>
+    </aside>
   )
 }

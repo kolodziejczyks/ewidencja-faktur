@@ -1,5 +1,23 @@
 [
   {
+    "version": "0.2.0",
+    "date": "2026-10-31",
+    "pl": [
+      "Dodawanie faktury zaczyna się od zwykłego formularza do przepisania danych. Po zapisaniu można od razu wpisać następną.",
+      "Dodawanie z pliku PDF lub zdjęcia jest nadal dostępne — przycisk „Dodaj z pliku” z boku.",
+      "Nowe pole „Forma płatności”: przelew albo gotówka.",
+      "Zniknęło oznaczanie „zapłacona / do zapłaty” — wszystkie wpisane faktury są zapłacone.",
+      "Nowy ekran „Do druku”: zestawienie z ostatnich 10 dni, tego miesiąca, ostatniego miesiąca, ostatniego kwartału albo całego roku. Zastępuje eksport do Excela."
+    ],
+    "en": [
+      "Adding an invoice now starts with a plain form for typing it in; after saving, the next one can be entered straight away.",
+      "Adding from a PDF or photo is still there — the \"Dodaj z pliku\" button on the side.",
+      "New \"payment method\" field: bank transfer or cash.",
+      "No more \"paid / to pay\" status — every recorded invoice is a paid one.",
+      "New \"Do druku\" (print) screen: a list for the last 10 days, this month, last month, last quarter or the whole year. Replaces the Excel export."
+    ]
+  },
+  {
     "version": "0.1.1",
     "date": "2026-10-31",
     "pl": [

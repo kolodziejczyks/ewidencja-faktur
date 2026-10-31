@@ -4,7 +4,7 @@ import { WhatsNewDialog } from './components/Changelog'
 import { Toast } from './components/Common'
 import { UpdateBanner } from './components/UpdateBanner'
 import { AddScreen } from './screens/AddScreen'
-import { ExportScreen } from './screens/ExportScreen'
+import { PrintScreen } from './screens/PrintScreen'
 import { InvoiceScreen } from './screens/InvoiceScreen'
 import { LedgerScreen } from './screens/LedgerScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
@@ -12,12 +12,12 @@ import { SummaryScreen } from './screens/SummaryScreen'
 import { TrashScreen } from './screens/TrashScreen'
 import { useAppData } from './useAppData'
 
-type Screen = { name: 'ledger' } | { name: 'add' } | { name: 'invoice'; id: number } | { name: 'summary' } | { name: 'export' } | { name: 'trash' } | { name: 'settings' }
+type Screen = { name: 'ledger' } | { name: 'add' } | { name: 'invoice'; id: number } | { name: 'summary' } | { name: 'print' } | { name: 'trash' } | { name: 'settings' }
 
 const NAV: { name: Screen['name']; label: string; icon: string }[] = [
   { name: 'ledger', label: 'Faktury', icon: '📒' },
   { name: 'summary', label: 'Podsumowanie', icon: '📊' },
-  { name: 'export', label: 'Eksport do Excela', icon: '📤' },
+  { name: 'print', label: 'Do druku', icon: '🖨' },
   { name: 'trash', label: 'Kosz', icon: '🗑' },
   { name: 'settings', label: 'Ustawienia', icon: '⚙️' }
 ]
@@ -164,7 +164,7 @@ export default function App() {
           <InvoiceScreen data={data} invoiceId={screen.id} onBack={() => setScreen({ name: 'ledger' })} onOpenInvoice={openInvoice} notify={notify} />
         )}
         {screen.name === 'summary' && <SummaryScreen data={data} />}
-        {screen.name === 'export' && <ExportScreen data={data} />}
+        {screen.name === 'print' && <PrintScreen data={data} />}
         {screen.name === 'trash' && <TrashScreen data={data} notify={notify} />}
         {screen.name === 'settings' && <SettingsScreen data={data} appInfo={appInfo} updateState={updateState} notify={notify} />}
       </main>

@@ -1,4 +1,4 @@
-/** One invoice: document preview and the editable form, plus "mark as paid" and "move to bin". */
+/** One invoice: document preview and the editable form, and "move to bin". */
 
 import { useMemo, useState } from 'react'
 import { formatDate } from '@shared/dates'
@@ -31,12 +31,6 @@ export function InvoiceScreen({ data, invoiceId, onBack, onOpenInvoice, notify }
         </button>
       </div>
     )
-  }
-
-  const togglePaid = async () => {
-    await window.api.setPaid(invoice.id, !invoice.paid)
-    await data.refresh()
-    notify(invoice.paid ? 'Oznaczono jako niezapłaconą' : 'Oznaczono jako zapłaconą ✓')
   }
 
   const remove = async () => {
@@ -73,13 +67,6 @@ export function InvoiceScreen({ data, invoiceId, onBack, onOpenInvoice, notify }
               )
             })}
           </div>
-        </div>
-        <div className="btn-row">
-          {invoice.kind === 'invoice' && (
-            <button className={`btn btn-large ${invoice.paid ? '' : 'btn-good'}`} onClick={() => void togglePaid()}>
-              {invoice.paid ? '↩ Jednak niezapłacona' : '✓ Oznacz jako zapłaconą'}
-            </button>
-          )}
         </div>
       </div>
 

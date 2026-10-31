@@ -4,14 +4,14 @@ import { useMemo, useState } from 'react'
 import { formatDate, formatMonthKey, monthKey, inMonthPhrase, shiftMonth } from '@shared/dates'
 import { formatMoney } from '@shared/money'
 import { normalizeNip } from '@shared/nip'
-import { percentChange, totalsByMonth } from '@shared/summary'
-import type { Invoice } from '@shared/types'
+import { paymentMethodLabel, percentChange, totalsByMonth } from '@shared/summary'
+import type { Invoice, PaymentMethod } from '@shared/types'
 import type { AppData } from '../useAppData'
 import { Notice, Pill } from '../components/Common'
-import { flagLabel, paymentStatus } from '../lib/flags'
-import { ENTRIES, INVOICES, plural } from '../lib/plural'
+import { flagLabel } from '../lib/flags'
+import { ENTRIES, plural } from '../lib/plural'
 
-type Filter = 'all' | 'unpaid' | 'overdue'
+type Filter = 'all' | PaymentMethod
 
 interface Props {
   data: AppData
@@ -48,16 +48,12 @@ export function LedgerScreen({ data, onOpenInvoice, onAdd, onOpenSettings, backu
     (inv) =>
       matches(inv, query) &&
       (year === 'all' || inv.issueDate.startsWith(year)) &&
-      (filter === 'all' ||
-        (filter === 'unpaid' && inv.kind === 'invoice' && !inv.paid) ||
-        (filter === 'overdue' && inv.flags.some((f) => f.type === 'overdue')))
+      (filter === 'all' || inv.paymentMethod === filter)
   )
 
   const months = new Map<string, Invoice[]>()
   for (const inv of visible) months.set(monthKey(inv.issueDate), [...(months.get(monthKey(inv.issueDate)) ?? []), inv])
 
-  const overdue = invoices.filter((i) => i.flags.some((f) => f.type === 'overdue'))
-  const dueSoon = invoices.filter((i) => i.flags.some((f) => f.type === 'dueSoon'))
   const isFiltered = query || filter !== 'all' || year !== 'all'
 
   return (
@@ -72,21 +68,6 @@ export function LedgerScreen({ data, onOpenInvoice, onAdd, onOpenSettings, backu
       {backupWarning && (
         <Notice tone="warn" icon="💾">
           {backupWarning}
-        </Notice>
-      )}
-      {overdue.length > 0 && (
-        <Notice tone="bad" icon="⏰">
-          <strong>Po terminie płatności: {plural(overdue.length, INVOICES)}</strong>{' '}
-          — razem {formatMoney(overdue.reduce((s, i) => s + (i.grossAmount ?? 0), 0))}.{' '}
-          <button className="btn btn-small" onClick={() => setFilter('overdue')}>
-            Pokaż je
-          </button>
-        </Notice>
-      )}
-      {dueSoon.length > 0 && (
-        <Notice tone="warn" icon="⏳">
-          <strong>Do zapłaty w najbliższych dniach:</strong>{' '}
-          {dueSoon.map((i) => `${i.supplierName} (${formatMoney(i.grossAmount)}, do ${formatDate(i.dueDate)})`).join('; ')}
         </Notice>
       )}
       {data.loaded && !data.settings?.ownNip && invoices.length < 3 && (
@@ -108,12 +89,12 @@ export function LedgerScreen({ data, onOpenInvoice, onAdd, onOpenSettings, backu
               aria-label="Szukaj"
             />
           </div>
-          <div className="segmented" role="group" aria-label="Pokaż">
+          <div className="segmented" role="group" aria-label="Forma płatności">
             {(
               [
                 ['all', 'Wszystkie'],
-                ['unpaid', 'Do zapłaty'],
-                ['overdue', 'Po terminie']
+                ['transfer', 'Przelew'],
+                ['cash', 'Gotówka']
               ] as const
             ).map(([key, label]) => (
               <button key={key} className={filter === key ? 'active' : ''} onClick={() => setFilter(key)}>
@@ -138,7 +119,7 @@ export function LedgerScreen({ data, onOpenInvoice, onAdd, onOpenSettings, backu
         <div className="card empty">
           <div className="empty-icon">📒</div>
           <h2>Zeszyt jest jeszcze pusty</h2>
-          <p>Dodaj pierwszą fakturę — wystarczy przeciągnąć plik albo go wybrać.</p>
+          <p>Kliknij „Dodaj fakturę” i przepisz pierwszą fakturę.</p>
           <button className="btn btn-primary btn-large" onClick={onAdd}>
             ➕ Dodaj fakturę
           </button>
@@ -197,7 +178,6 @@ export function LedgerScreen({ data, onOpenInvoice, onAdd, onOpenSettings, backu
 }
 
 function InvoiceRow({ invoice: inv, onOpen }: { invoice: Invoice; onOpen: () => void }) {
-  const status = paymentStatus(inv)
   return (
     <button className="entry" onClick={onOpen}>
       <span className="entry-date">{formatDate(inv.issueDate)}</span>
@@ -215,9 +195,9 @@ function InvoiceRow({ invoice: inv, onOpen }: { invoice: Invoice; onOpen: () => 
       </span>
       <span className="entry-amount">{formatMoney(inv.grossAmount)}</span>
       <span className="entry-status">
-        {status && (
-          <Pill tone={status.tone} icon={status.icon}>
-            {status.text}
+        {inv.paymentMethod && (
+          <Pill tone="neutral" icon={inv.paymentMethod === 'cash' ? '💵' : '🏦'}>
+            {paymentMethodLabel(inv.paymentMethod)}
           </Pill>
         )}
         {inv.flags.map((f, i) => {

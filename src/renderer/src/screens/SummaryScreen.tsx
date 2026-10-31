@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { formatMonthKey, inMonthPhrase, monthKey, MONTH_NAMES_SHORT, shiftMonth, today } from '@shared/dates'
 import { formatMoney } from '@shared/money'
-import { compareMonths, invoicesInMonth, monthSeries, percentChange, totalsBy } from '@shared/summary'
+import { compareMonths, invoicesInMonth, monthSeries, percentChange, sumAmounts, totalsBy } from '@shared/summary'
 import type { AppData } from '../useAppData'
 import { INVOICES, plural } from '../lib/plural'
 
@@ -37,7 +37,7 @@ export function SummaryScreen({ data }: { data: AppData }) {
   const inMonth = useMemo(() => invoicesInMonth(invoices, month), [invoices, month])
   const total = (key: string) => invoicesInMonth(invoices, key).reduce((s, i) => s + (i.grossAmount ?? 0), 0)
   const current = total(month)
-  const unpaid = invoices.filter((i) => i.kind === 'invoice' && !i.paid)
+  const byMethod = (method: 'transfer' | 'cash') => sumAmounts(inMonth.filter((i) => i.paymentMethod === method))
 
   const chartData = useMemo(() => {
     const thisYear = monthSeries(invoices, month, 12)
@@ -86,9 +86,13 @@ export function SummaryScreen({ data }: { data: AppData }) {
           <Change current={current} previous={total(yearAgo)} against="rok temu" />
         </div>
         <div className="card">
-          <div className="stat-label">Wszystkie niezapłacone</div>
-          <div className="stat-value">{formatMoney(unpaid.reduce((s, i) => s + (i.grossAmount ?? 0), 0))}</div>
-          <span className="stat-note">{plural(unpaid.length, INVOICES)}</span>
+          <div className="stat-label">Jak zapłacono — {formatMonthKey(month).toLowerCase()}</div>
+          <div className="stat-note" style={{ fontSize: '1.05rem', marginTop: 6 }}>
+            🏦 Przelewem: <strong>{formatMoney(byMethod('transfer'))}</strong>
+          </div>
+          <div className="stat-note" style={{ fontSize: '1.05rem', marginTop: 4 }}>
+            💵 Gotówką: <strong>{formatMoney(byMethod('cash'))}</strong>
+          </div>
         </div>
       </div>
 

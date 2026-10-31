@@ -32,7 +32,8 @@ describe('parseInvoiceText', () => {
       issueDate: '2026-10-14',
       dueDate: '2026-10-28',
       grossAmount: 62580,
-      netAmount: 59600
+      netAmount: 59600,
+      paymentMethod: 'transfer'
     })
   })
 
@@ -65,6 +66,12 @@ Razem brutto: 12 345,67 PLN`
     expect(r.grossAmount).toBe(104999)
   })
 
+  it('reads the payment method', () => {
+    expect(parseInvoiceText('Forma płatności: gotówka\nDo zapłaty 10,00 zł').paymentMethod).toBe('cash')
+    expect(parseInvoiceText('Sposób zapłaty przelew 14 dni').paymentMethod).toBe('transfer')
+    expect(parseInvoiceText('Sposób płatności: karta').paymentMethod).toBeNull()
+  })
+
   it('returns nulls for unrelated text instead of guessing wildly', () => {
     const r = parseInvoiceText('Kupić chleb i mleko. Zadzwonić do pana Marka.')
     expect(r).toEqual({
@@ -74,7 +81,8 @@ Razem brutto: 12 345,67 PLN`
       issueDate: null,
       dueDate: null,
       grossAmount: null,
-      netAmount: null
+      netAmount: null,
+      paymentMethod: null
     })
   })
 })

@@ -7,7 +7,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { formatDate, isValidIsoDate, today } from '@shared/dates'
 import { formatMoney, moneyToInput, parseMoney } from '@shared/money'
 import { formatNip, isValidNip, normalizeNip } from '@shared/nip'
-import type { Category, EntryKind, ImportResult, Invoice, InvoiceInput, StoredFile, Supplier } from '@shared/types'
+import { PAYMENT_METHOD_LABELS } from '@shared/summary'
+import type { Category, EntryKind, ImportResult, Invoice, InvoiceInput, PaymentMethod, StoredFile, Supplier } from '@shared/types'
 import { Notice, Spinner } from './Common'
 
 export interface FormValues {
@@ -20,7 +21,7 @@ export interface FormValues {
   gross: string
   net: string
   categoryId: string
-  paid: boolean
+  paymentMethod: PaymentMethod | ''
   note: string
 }
 
@@ -37,7 +38,7 @@ export function emptyForm(): FormValues {
     gross: '',
     net: '',
     categoryId: '',
-    paid: false,
+    paymentMethod: '',
     note: ''
   }
 }
@@ -53,7 +54,7 @@ export function formFromInvoice(inv: Invoice): FormValues {
     gross: moneyToInput(inv.grossAmount),
     net: moneyToInput(inv.netAmount),
     categoryId: inv.categoryId ? String(inv.categoryId) : '',
-    paid: inv.paid,
+    paymentMethod: inv.paymentMethod ?? '',
     note: inv.note
   }
 }
@@ -152,13 +153,19 @@ export function InvoiceForm(props: Props) {
     if (known?.nip && !values.supplierNip) setValues((prev) => ({ ...prev, supplierName: name, supplierNip: formatNip(known.nip) }))
   }
 
-  // Suggest the category used last time for this supplier.
+  // Suggest the category and payment method used last time for this supplier.
   useEffect(() => {
-    if (touched.has('categoryId') || values.categoryId) return
     const name = values.supplierName.trim().toLowerCase()
-    const last = invoices.find((i) => i.supplierName.toLowerCase() === name && i.categoryId)
-    if (last) setValues((prev) => ({ ...prev, categoryId: String(last.categoryId) }))
-  }, [values.supplierName, values.categoryId, invoices, touched])
+    if (!name) return
+    const previous = invoices.filter((i) => i.supplierName.toLowerCase() === name && i.id !== props.invoiceId)
+    const lastCategory = previous.find((i) => i.categoryId)?.categoryId
+    const lastMethod = previous.find((i) => i.paymentMethod)?.paymentMethod
+    setValues((prev) => ({
+      ...prev,
+      categoryId: !touched.has('categoryId') && !prev.categoryId && lastCategory ? String(lastCategory) : prev.categoryId,
+      paymentMethod: !touched.has('paymentMethod') && !prev.paymentMethod && lastMethod ? lastMethod : prev.paymentMethod
+    }))
+  }, [values.supplierName, invoices, touched, props.invoiceId])
 
   // Warn about an invoice with the same number from the same supplier.
   useEffect(() => {
@@ -195,7 +202,7 @@ export function InvoiceForm(props: Props) {
       grossAmount: parseMoney(values.gross),
       netAmount: parseMoney(values.net),
       categoryId: values.categoryId ? Number(values.categoryId) : null,
-      paid: values.kind === 'invoice' && values.paid,
+      paymentMethod: values.paymentMethod || null,
       note: values.note,
       fileIds: props.files.map((f) => f.id)
     }
@@ -362,26 +369,35 @@ export function InvoiceForm(props: Props) {
         )}
       </div>
 
-      <div className="field">
-        <label htmlFor="category">Kategoria</label>
-        <select id="category" className={cls('categoryId')} value={values.categoryId} onChange={(e) => set('categoryId', e.target.value)}>
-          <option value="">— wybierz —</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {isInvoice && (
+      <div className="field-row">
         <div className="field">
-          <label className={`check ${values.paid ? 'checked' : ''}`}>
-            <input type="checkbox" checked={values.paid} onChange={(e) => set('paid', e.target.checked)} />
-            {values.paid ? 'Zapłacona ✓' : 'Zaznacz, jeśli faktura jest już zapłacona'}
-          </label>
+          <label htmlFor="category">Kategoria</label>
+          <select id="category" className={cls('categoryId')} value={values.categoryId} onChange={(e) => set('categoryId', e.target.value)}>
+            <option value="">— wybierz —</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
+        <div className="field">
+          <label htmlFor="paymentMethod">Forma płatności</label>
+          <select
+            id="paymentMethod"
+            className={cls('paymentMethod')}
+            value={values.paymentMethod}
+            onChange={(e) => set('paymentMethod', e.target.value as FormValues['paymentMethod'])}
+          >
+            <option value="">— wybierz —</option>
+            {(Object.entries(PAYMENT_METHOD_LABELS) as [PaymentMethod, string][]).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <div className="field">
         <label htmlFor="note">Notatka</label>

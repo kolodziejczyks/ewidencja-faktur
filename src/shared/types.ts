@@ -28,9 +28,10 @@ export interface Category {
   sortOrder: number
 }
 
+/** How the invoice was paid. Every entry is recorded after payment, so there is no "unpaid" state. */
+export type PaymentMethod = 'transfer' | 'cash'
+
 export type InvoiceFlag =
-  | { type: 'overdue'; daysLate: number }
-  | { type: 'dueSoon'; daysLeft: number }
   | { type: 'duplicate'; otherId: number }
   | { type: 'unusualAmount'; percentAboveTypical: number }
 
@@ -47,8 +48,7 @@ export interface Invoice {
   netAmount: number | null
   categoryId: number | null
   categoryName: string
-  paid: boolean
-  paidDate: string | null
+  paymentMethod: PaymentMethod | null
   note: string
   createdAt: string
   updatedAt: string
@@ -69,7 +69,7 @@ export interface InvoiceInput {
   grossAmount: number | null
   netAmount: number | null
   categoryId: number | null
-  paid: boolean
+  paymentMethod: PaymentMethod | null
   note: string
   fileIds: number[]
 }
@@ -121,7 +121,6 @@ export interface Api {
   listDeletedInvoices(): Promise<Invoice[]>
   getInvoice(id: number): Promise<Invoice | null>
   saveInvoice(input: InvoiceInput): Promise<Invoice>
-  setPaid(id: number, paid: boolean): Promise<void>
   deleteInvoice(id: number): Promise<void>
   restoreInvoice(id: number): Promise<void>
   findDuplicate(input: { id?: number; supplierNip: string; supplierName: string; number: string }): Promise<Invoice | null>
@@ -140,9 +139,7 @@ export interface Api {
   ocrFile(fileId: number): Promise<string>
   ocrImage(png: Uint8Array): Promise<string>
 
-  exportExcel(range: { from: string; to: string }): Promise<string | null>
   openPath(path: string): Promise<void>
-  showInFolder(path: string): Promise<void>
 
   getSettings(): Promise<Settings>
   setOwnNip(nip: string): Promise<void>

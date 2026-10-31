@@ -66,6 +66,11 @@ const MIGRATIONS: string[] = [
     ('Wyposażenie i naprawy', 5),
     ('Opłaty i podatki', 6),
     ('Inne', 7);
+  `,
+  // 0.2: entries are only recorded once paid, so "paid" is always true; the payment method is new.
+  `
+  ALTER TABLE invoices ADD COLUMN payment_method TEXT;
+  UPDATE invoices SET paid = 1, paid_date = COALESCE(paid_date, issue_date);
   `
 ]
 

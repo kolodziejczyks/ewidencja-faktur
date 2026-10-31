@@ -16,34 +16,39 @@
 ## Why
 
 It was written for a family member who runs a small grocery store and kept every cost invoice in
-a paper notebook, copying each one by hand. This app replaces the notebook: drop in a PDF or a
-photo of an invoice, check the fields it read automatically, and it is filed, searchable, summed
-up per month and backed up.
+a paper notebook, copying each one by hand. This app replaces the notebook: type the invoice
+into a simple form (or add a PDF or photo and let it read the fields), and it is filed,
+searchable, summed up per month, ready to print and backed up.
 
 The user interface is in **Polish** (that is who it is for); the code and documentation are in
 English.
 
 ## Features
 
-- **Add invoices from PDF, photos (JPG/PNG) or Word (.docx)** — drag & drop or pick files, several at once.
-- **Automatic reading** of invoice number, supplier, tax ID (NIP), issue/due dates and amounts:
+- **Typing invoices in by hand is the default** — one form with supplier, number, amount, dates,
+  category and payment method (bank transfer / cash). Known suppliers are remembered.
+- **Optionally from a file** — PDF, photos (JPG/PNG) or Word (.docx), from a separate side panel or
+  by drag & drop. The document is shown next to the form and its fields are **read automatically**:
   PDF text layer when available, otherwise **offline OCR** (Tesseract, Polish model bundled).
   Every guessed field is highlighted so it gets checked before saving.
 - **The notebook view** — entries grouped by month with totals and month-over-month change,
-  one search box, filters for unpaid / overdue.
-- **Warnings** — overdue and soon-due payments, likely duplicates (same supplier + number, or
-  the same file twice) and amounts far above what a supplier usually charges.
-- **Summary** — costs per month vs. the year before, top suppliers, categories, and a per-supplier
-  comparison with the previous month.
-- **Excel export** of any period (list + monthly/supplier/category totals), e.g. for the accountant.
+  one search box, filter by payment method.
+- **Warnings** — likely duplicates (same supplier + number, or the same file twice) and amounts
+  far above what a supplier usually charges.
+- **Summary** — costs per month vs. the year before, transfer vs. cash, top suppliers, categories,
+  and a per-supplier comparison with the previous month.
+- **Ready to print** — an A4 list of invoices for the last 10 days, this month, last month, last
+  quarter or this year, with totals split by payment method.
 - **Safe by default** — no save button to forget, a 30-day recycle bin, daily automatic backups
   (to OneDrive when available) and one-click restore.
 - **Automatic updates** from GitHub Releases, downloaded quietly and installed with one click;
   a "what's new" note (Polish / English) is shown after each update.
 
-| Adding a photographed invoice | Summary |
+| Adding an invoice by hand | Adding an invoice from a photo |
 | --- | --- |
-| ![Adding an invoice](docs/screenshots/add-photo.png) | ![Summary](docs/screenshots/summary.png) |
+| ![Manual entry](docs/screenshots/add-manual.png) | ![Adding from a photo](docs/screenshots/add-photo.png) |
+| **Summary** | **Ready to print** |
+| ![Summary](docs/screenshots/summary.png) | ![Print view](docs/screenshots/print.png) |
 
 ## Accessibility choices
 
@@ -55,7 +60,7 @@ and nothing destructive without a confirmation and an undo.
 ## Tech stack
 
 Electron · React · TypeScript · Vite (electron-vite) · SQLite (`node:sqlite`, no native modules) ·
-pdf.js · Tesseract.js · mammoth · ExcelJS · Recharts · electron-builder · electron-updater
+pdf.js · Tesseract.js · mammoth · Recharts · electron-builder · electron-updater
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how it fits together and
 [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) for the product requirements.
@@ -68,7 +73,7 @@ Requires Node.js 24+ on Windows.
 npm install
 npm run dev          # app with hot reload
 npm test             # unit tests (invoice parser, money, NIP, warnings, summaries)
-npm run test:e2e     # drives the real app: imports a PDF and a photo, checks OCR, saves screenshots
+npm run test:e2e     # drives the real app: manual entry, PDF + photo import with OCR, print view, screenshots
 npm run dist         # builds the installer into dist/
 ```
 

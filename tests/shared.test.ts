@@ -33,29 +33,14 @@ describe('nip', () => {
 })
 
 describe('computeFlags', () => {
-  const base = { kind: 'invoice' as const, paid: true, dueDate: null, number: '' }
-
-  it('flags overdue and soon-due unpaid invoices', () => {
-    const flags = computeFlags(
-      [
-        { ...base, id: 1, supplierId: 1, issueDate: '2026-10-01', grossAmount: 100, paid: false, dueDate: '2026-10-20' },
-        { ...base, id: 2, supplierId: 1, issueDate: '2026-10-01', grossAmount: 100, paid: false, dueDate: '2026-11-02' }
-      ],
-      '2026-10-31'
-    )
-    expect(flags.get(1)).toEqual([{ type: 'overdue', daysLate: 11 }])
-    expect(flags.get(2)).toEqual([{ type: 'dueSoon', daysLeft: 2 }])
-  })
+  const base = { number: '' }
 
   it('flags duplicates by supplier and normalized number', () => {
-    const flags = computeFlags(
-      [
+    const flags = computeFlags([
         { ...base, id: 1, supplierId: 7, number: 'FV/1/2026', issueDate: '2026-10-01', grossAmount: 100 },
         { ...base, id: 2, supplierId: 7, number: 'fv/1/2026 ', issueDate: '2026-10-02', grossAmount: 100 },
         { ...base, id: 3, supplierId: 8, number: 'FV/1/2026', issueDate: '2026-10-02', grossAmount: 100 }
-      ],
-      '2026-10-31'
-    )
+    ])
     expect(flags.get(1)).toEqual([{ type: 'duplicate', otherId: 2 }])
     expect(flags.get(3)).toBeUndefined()
   })
@@ -63,7 +48,7 @@ describe('computeFlags', () => {
   it('flags amounts far above the supplier median', () => {
     const amounts = [10000, 11000, 9000, 10500, 20000]
     const invoices = amounts.map((a, i) => ({ ...base, id: i + 1, supplierId: 1, issueDate: `2026-0${i + 1}-10`, grossAmount: a }))
-    const flags = computeFlags(invoices, '2026-10-31')
+    const flags = computeFlags(invoices)
     expect(flags.get(5)).toEqual([{ type: 'unusualAmount', percentAboveTypical: 95 }])
     expect(flags.get(4)).toBeUndefined()
   })
@@ -71,7 +56,7 @@ describe('computeFlags', () => {
 
 describe('summary', () => {
   const inv = (issueDate: string, supplierName: string, grossAmount: number) => ({
-    issueDate, supplierName, grossAmount, categoryName: '', paid: true, kind: 'invoice' as const
+    issueDate, supplierName, grossAmount, categoryName: '', paymentMethod: null
   })
   const data = [inv('2026-09-03', 'A', 1000), inv('2026-10-03', 'A', 1500), inv('2026-10-04', 'B', 500)]
 

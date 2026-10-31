@@ -1,7 +1,7 @@
 /** Aggregations used by the summary screen and the Excel export. */
 
 import { monthKey, shiftMonth } from './dates'
-import type { Invoice } from './types'
+import type { Invoice, PaymentMethod } from './types'
 
 export interface MonthTotal {
   month: string // YYYY-MM
@@ -24,9 +24,19 @@ export interface MonthComparisonRow {
   percent: number | null
 }
 
-type SummaryInput = Pick<Invoice, 'issueDate' | 'grossAmount' | 'supplierName' | 'categoryName' | 'paid' | 'kind'>
+type SummaryInput = Pick<Invoice, 'issueDate' | 'grossAmount' | 'supplierName' | 'categoryName' | 'paymentMethod'>
 
 const amount = (inv: SummaryInput) => inv.grossAmount ?? 0
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = { transfer: 'Przelew', cash: 'Gotówka' }
+
+export function paymentMethodLabel(method: PaymentMethod | null): string {
+  return method ? PAYMENT_METHOD_LABELS[method] : 'Nie podano'
+}
+
+export function sumAmounts(invoices: SummaryInput[]): number {
+  return invoices.reduce((s, i) => s + amount(i), 0)
+}
 
 export function totalsByMonth(invoices: SummaryInput[]): Map<string, MonthTotal> {
   const map = new Map<string, MonthTotal>()

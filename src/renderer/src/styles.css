@@ -638,30 +638,32 @@ textarea.input {
 
 /* ---------- add / edit ---------- */
 
-.dropzone {
-  border: 3px dashed var(--line-strong);
-  border-radius: 20px;
-  background: var(--surface);
-  padding: 64px 32px;
-  text-align: center;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.dropzone.over {
-  border-color: var(--primary);
-  background: var(--primary-soft);
-}
-
-.dropzone .big-icon {
-  font-size: 4rem;
-  margin-bottom: 8px;
-}
-
 .split {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(420px, 1fr);
   gap: 24px;
   align-items: start;
+}
+
+.add-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 760px) 300px;
+  gap: 24px;
+  align-items: start;
+}
+
+.side-panel {
+  position: sticky;
+  top: 24px;
+  border-style: dashed;
+  border-width: 2px;
+  box-shadow: none;
+  background: var(--surface-2);
+}
+
+.side-panel.over {
+  border-color: var(--primary);
+  background: var(--primary-soft);
 }
 
 .preview {
@@ -1022,4 +1024,117 @@ textarea.input {
   font-family: Consolas, monospace;
   font-size: 0.9rem;
   word-break: break-all;
+}
+
+/* ---------- print ---------- */
+
+.print-sheet {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  padding: 40px 44px;
+  font-size: 15px;
+  color: #000;
+}
+
+.print-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid #000;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.print-header h2 {
+  margin: 0 0 4px;
+}
+
+.print-table,
+.print-totals {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.print-table th,
+.print-table td {
+  border: 1px solid #999;
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.print-table th {
+  background: #eee;
+  font-size: 0.9em;
+}
+
+.print-table tr {
+  break-inside: avoid;
+}
+
+.print-table .num,
+.print-totals .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.print-small {
+  font-size: 0.8em;
+  color: #444;
+}
+
+.print-totals {
+  width: auto;
+  margin: 18px 0 0 auto;
+  min-width: 320px;
+}
+
+.print-totals td {
+  padding: 4px 8px;
+}
+
+.print-totals .grand td {
+  font-weight: 700;
+  font-size: 1.1em;
+  border-top: 2px solid #000;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  html,
+  body,
+  .app,
+  .main {
+    display: block;
+    height: auto;
+    overflow: visible;
+    background: white;
+  }
+
+  .sidebar,
+  .no-print,
+  .update-banner,
+  .toast,
+  .drop-overlay {
+    display: none !important;
+  }
+
+  .screen {
+    padding: 0;
+    max-width: none !important;
+  }
+
+  .print-sheet {
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    font-size: 11pt;
+  }
 }
